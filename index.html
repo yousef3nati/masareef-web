@@ -152,7 +152,7 @@
   .ov h2{font-size:1.15rem;margin-bottom:6px}
   .ov p{font-size:.85rem;color:var(--muted);margin-bottom:14px}
   .ov .two{margin-bottom:6px}
-  .ov .skip{width:100%;margin-top:8px;padding:10px;border:none;background:none;color:var(--muted);cursor:pointer}
+  .ov .skip,.ofrm .skip{width:100%;margin-top:8px;padding:10px;border:none;background:none;color:var(--muted);cursor:pointer}
   nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--line);display:flex}
   nav{padding-bottom:env(safe-area-inset-bottom)}
   nav button{position:relative;flex:1;padding:14px 0 18px;border:none;background:none;font-weight:500;font-size:.9rem;color:var(--muted);cursor:pointer}
@@ -178,6 +178,7 @@
   .orow{display:flex;gap:6px;margin-top:4px}
   .orow button{border:none;background:none;color:var(--muted);font-size:.8rem;cursor:pointer;padding:2px 4px}
   .ofrm{margin-top:12px}
+  .ofrm .skip{border:1px solid var(--line);border-radius:12px;padding:13px;background:var(--paper);color:var(--ink);font-size:1rem;margin-top:10px}
   .item.obl .bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden;width:100%}
   .item.obl .bar i{display:block;height:100%;background:var(--olive-2);border-radius:3px}
   .oplist{margin-top:4px;border-top:1px dashed var(--line);padding-top:4px}
@@ -836,7 +837,7 @@ async function sync(){
     if(e.status===401||e.status===403){sh.joined='';ssave()}
     syncErr=e.status?'err':'off';
   }finally{
-    syncing=false;renderShared();
+    syncing=false;renderShared(true);
     if(syncAgain)setTimeout(sync,300);
   }
 }
@@ -872,10 +873,10 @@ function walletObl(total){
   return`<div class="wdebt">بعد التزاماتك بالـ30 يوم الجاية ≈ ${fmt(total-d,0)} ₪</div>`;
 }
 
-function renderShared(){
+function renderShared(bg){
   if(!sh)return;
   renderAlerts();renderBadge();renderHset();
-  if($('v-house').classList.contains('on'))renderHouse();
+  if($('v-house').classList.contains('on')){if(bg&&houseBusy()){hPending=true;renderHstat()}else renderHouse()}
   if($('v-month').classList.contains('on'))renderMonth();
 }
 function renderBadge(){const n=sh.code?shopOpen().length:0;$('hbadge').textContent=n;$('hbadge').classList.toggle('hide',!n)}
@@ -893,6 +894,9 @@ function hstatTxt(){
   const m=Math.round((Date.now()-sh.last)/6e4);
   return`🟢 متزامن${m<1?'':m<60?` · قبل ${m} د`:''}`;
 }
+let hPending=false,shopDraft={n:'',q:''};
+function houseBusy(){const a=document.activeElement;return!!(a&&a!==document.body&&$('hbody').contains(a)&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))}
+$('hbody').addEventListener('focusout',()=>setTimeout(()=>{if(hPending&&!houseBusy()){hPending=false;renderHouse()}},400));
 function renderHstat(){const el=$('hstat-t');if(el)el.textContent=hstatTxt()}
 
 function renderHouse(){
@@ -938,7 +942,7 @@ function shopHTML(){
   const open=shopOpen(),done=Object.values(sh.shop).filter(x=>x.done);
   const fq=Object.entries(data.settings.shopFreq||{}).filter(([n])=>!open.some(x=>x.n===n)).sort((a,b)=>b[1]-a[1]).slice(0,10);
   let h=`<div class="card">
-    <div class="addp" style="margin-top:0"><input id="s-n" placeholder="شو ناقص؟ مثلاً: حليب"><input id="s-q" class="sq" placeholder="الكمية"><button id="s-add">+ ضيف</button></div>
+    <div class="addp" style="margin-top:0"><input id="s-n" placeholder="شو ناقص؟ مثلاً: حليب" value="${esc(shopDraft.n)}"><input id="s-q" class="sq" placeholder="الكمية" value="${esc(shopDraft.q)}"><button id="s-add">+ ضيف</button></div>
     <div class="subs">${PLACES.map(p=>`<button class="sub pl${shopPlace===p.id?' sel':''}" data-p="${p.id}">${p.i} ${p.n}</button>`).join('')}</div>
     ${fq.length?`<div class="gtitle" style="margin-top:12px">بكبسة وحدة</div><div class="subs freq" style="margin-top:0">${fq.map(([n])=>`<button class="sub fqb" data-n="${esc(n)}">+ ${esc(n)}</button>`).join('')}</div>`:''}
   </div>`;
@@ -967,7 +971,8 @@ function addShop(n,q){
 }
 function bindShop(){
   const b=$('hbody');
-  const go=()=>{if(addShop($('s-n').value,$('s-q').value.trim())){$('s-n').value='';$('s-q').value='';renderHouse();$('s-n').focus()}else $('s-n').focus()};
+  $('s-n').oninput=e=>shopDraft.n=e.target.value;$('s-q').oninput=e=>shopDraft.q=e.target.value;
+  const go=()=>{if(addShop($('s-n').value,$('s-q').value.trim())){shopDraft={n:'',q:''};renderHouse();$('s-n').focus()}else $('s-n').focus()};
   $('s-add').onclick=go;$('s-n').onkeydown=e=>{if(e.key==='Enter')go()};$('s-q').onkeydown=e=>{if(e.key==='Enter')go()};
   b.querySelectorAll('.pl').forEach(x=>x.onclick=()=>{shopPlace=x.dataset.p;b.querySelectorAll('.pl').forEach(y=>y.classList.toggle('sel',y===x))});
   b.querySelectorAll('.fqb').forEach(x=>x.onclick=()=>{const f=(data.settings.shopFreq||{});addShop(x.dataset.n,'');renderHouse()});
@@ -1052,7 +1057,8 @@ function bindObl(){
   });
   if(!oform)return;
   const dd=$('o-date'),upd=()=>{$('o-date-txt').textContent=dd.value?fullDate(dd.value):'اختار التاريخ'};
-  dd.value=oform.due||'';upd();dd.onchange=upd;dd.oninput=upd;
+  dd.value=oform.due||'';upd();dd.onchange=dd.oninput=()=>{oform.due=dd.value;upd()};
+  $('o-n').oninput=e=>oform.n=e.target.value;$('o-amt').oninput=e=>oform.amt=e.target.value;
   const keep=()=>{oform.n=$('o-n').value;oform.amt=$('o-amt').value;oform.due=dd.value};
   b.querySelectorAll('.oc').forEach(x=>x.onclick=()=>{oform.cur=x.dataset.c;b.querySelectorAll('.oc').forEach(y=>y.classList.toggle('on',y===x))});
   b.querySelectorAll('.orep').forEach(x=>x.onclick=()=>{oform.rep=x.dataset.k;b.querySelectorAll('.orep').forEach(y=>y.classList.toggle('sel',y===x))});
