@@ -178,6 +178,10 @@
   .orow{display:flex;gap:6px;margin-top:4px}
   .orow button{border:none;background:none;color:var(--muted);font-size:.8rem;cursor:pointer;padding:2px 4px}
   .ofrm{margin-top:12px}
+  .item.obl .bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden;width:100%}
+  .item.obl .bar i{display:block;height:100%;background:var(--olive-2);border-radius:3px}
+  .oplist{margin-top:4px;border-top:1px dashed var(--line);padding-top:4px}
+  .opd{border:none;background:none;color:var(--muted);cursor:pointer}
   .ofrm .field:first-child{margin-top:0}
   .newo{width:100%;margin-top:12px;padding:12px;border:1px dashed var(--olive);border-radius:10px;background:none;color:var(--olive);cursor:pointer;font-size:.95rem}
   .osum .two b{font-size:1.25rem}
@@ -752,7 +756,7 @@ const PLACES=[{id:'super',n:'سوبرماركت',i:'🛒'},{id:'veg',n:'خضرة
 const REP={once:'مرة وحدة',monthly:'شهري',yearly:'سنوي'};
 let sh,syncing=false,syncAgain=false,syncErr='',hview='shop',shopPlace='super',oform=null,payCur='ILS',payCb=null;
 
-function sblank(){return{code:'',name:'',joined:'',shop:{},obl:{},people:{},queue:[],last:0}}
+function sblank(){return{code:'',name:'',joined:'',shop:{},obl:{},people:{},pays:{},queue:[],last:0}}
 function sload(){try{sh={...sblank(),...(JSON.parse(localStorage.getItem(SKEY))||{})}}catch(e){sh=sblank()}}
 function ssave(){try{localStorage.setItem(SKEY,JSON.stringify(sh))}catch(e){}}
 function hhFromSettings(){const s=data.settings;if(!sh.code&&s.hh){sh.code=s.hh;sh.name=sh.name||s.hhName||'';sh.joined='';ssave()}}
@@ -821,7 +825,7 @@ async function sync(){
       if(q.del)await api('DELETE',p);else await api('PATCH',p,{fields:ff(q.v)});
       sh.queue=sh.queue.filter(x=>x!==q);ssave();
     }
-    for(const col of ['shop','obl','people']){
+    for(const col of ['shop','obl','people','pays']){
       const j=await api('GET',`/households/${sh.code}/${col}?pageSize=300`),m={};
       (j.documents||[]).forEach(d=>{const id=d.name.split('/').pop();m[id]={...pf(d.fields||{}),id}});
       sh[col]=m;
@@ -852,11 +856,17 @@ function daysTo(iso){const[y,m,d]=iso.split('-').map(Number),t=new Date();return
 function dueLbl(n){if(n<0)return`متأخر ${-n===1?'يوم':-n===2?'يومين':-n+(-n<=10?' أيام':' يوم')}`;if(n===0)return'اليوم';if(n===1)return'بكرا';if(n===2)return'بعد يومين';return`بعد ${n}${n<=10?' أيام':' يوم'}`}
 function addMonths(iso,n,dd){const[y,m,d]=iso.split('-').map(Number),t=new Date(y,m-1+n,1),dim=new Date(t.getFullYear(),t.getMonth()+1,0).getDate();return localISO(new Date(t.getFullYear(),t.getMonth(),Math.min(dd||d,dim)))}
 const nextDue=o=>o.rep==='monthly'?addMonths(o.due,1,o.dd):addMonths(o.due,12,o.dd);
-const oILS=o=>toILS(o.amt,o.cur,localISO(new Date()));
+const cyc=o=>o.cy||o.due;
+const conv=(a,from,to,d)=>from===to?a:(to==='ILS'?a*rateFor(d):a/rateFor(d));
+const paysOf=o=>Object.values(sh.pays||{}).filter(p=>p.oid===o.id&&p.cy===cyc(o)).sort((a,b)=>(a.t||0)-(b.t||0));
+const paidOf=o=>paysOf(o).reduce((s,p)=>s+p.a,0);
+const remOf=o=>Math.max(0,o.amt-paidOf(o));
+const oILS=o=>toILS(remOf(o),o.cur,localISO(new Date()));
 function monthlyEq(o){const v=oILS(o);if(o.rep==='monthly')return v;if(o.rep==='yearly')return v/12;return v/Math.max(1,Math.ceil(daysTo(o.due)/30))}
 const oblList=()=>Object.values(sh.obl).sort((a,b)=>a.due.localeCompare(b.due));
 const shopOpen=()=>Object.values(sh.shop).filter(x=>!x.done);
 function mineDue(days){return oblList().filter(o=>daysTo(o.due)<=days).reduce((s,o)=>s+oILS(o)*oshare(o),0)}
+function partsTxt(o){const m={};paysOf(o).forEach(p=>m[p.by||'؟']=(m[p.by||'؟']||0)+p.a);return Object.entries(m).map(([n,a])=>`${esc(n)} ${fmt(a)}`).join(' · ')}
 function walletObl(total){
   if(!sh||!sh.code)return'';const d=mineDue(30);if(!(d>0))return'';
   return`<div class="wdebt">بعد التزاماتك بالـ30 يوم الجاية ≈ ${fmt(total-d,0)} ₪</div>`;
@@ -870,8 +880,8 @@ function renderShared(){
 }
 function renderBadge(){const n=sh.code?shopOpen().length:0;$('hbadge').textContent=n;$('hbadge').classList.toggle('hide',!n)}
 function renderAlerts(){
-  const l=sh.code?oblList().filter(o=>oshare(o)>0&&daysTo(o.due)<=7).slice(0,3):[];
-  $('alerts').innerHTML=l.map(o=>{const n=daysTo(o.due);return`<button class="alert${n<0?' late':''}">${n<0?'⛔':'⚠️'} <b>${esc(o.n)}</b> · ${dueLbl(n)}<br><small>${fmt(o.amt)} ${SYM[o.cur]}${o.own==='all'?' · مشترك':''}</small></button>`}).join('');
+  const l=sh.code?oblList().filter(o=>oshare(o)>0&&remOf(o)>0&&daysTo(o.due)<=7).slice(0,3):[];
+  $('alerts').innerHTML=l.map(o=>{const n=daysTo(o.due);return`<button class="alert${n<0?' late':''}">${n<0?'⛔':'⚠️'} <b>${esc(o.n)}</b> · ${dueLbl(n)}<br><small>${paidOf(o)>0?`ضايل ${fmt(remOf(o))} من ${fmt(o.amt)}`:fmt(o.amt)} ${SYM[o.cur]}${o.own==='all'?' · مشترك':''}</small></button>`}).join('');
   $('alerts').querySelectorAll('.alert').forEach(b=>b.onclick=()=>{hview='obl';tab('house')});
 }
 function hstatTxt(){
@@ -988,9 +998,12 @@ function oblHTML(){
     const n=daysTo(o.due),col=n<0?'var(--red)':n<=7?'var(--amber)':'var(--olive-2)';
     return`<div class="item obl"><span class="dot" style="background:${col};margin-top:6px"></span>
       <div class="t"><div><b>${esc(o.n)}</b></div><small><bdi>${fullDate(o.due)}</bdi> · ${dueLbl(n)}</small><small>${REP[o.rep]} · ${esc(pnm(o.own))}</small>
-        ${o.lp?`<small>آخر دفعة: <bdi>${dm(o.lp.d)}</bdi> · ${esc(o.lp.by||'')}</small>`:''}
+        ${(()=>{const pd=paidOf(o);if(!(pd>0))return'';const pc=Math.min(100,pd/o.amt*100);
+          return`<div class="bar" style="margin-top:6px"><i style="width:${pc}%"></i></div><small>دفعتوا ${fmt(pd)} · ضايل <b>${fmt(remOf(o))}</b> ${SYM[o.cur]}</small><small>${partsTxt(o)}</small>
+          <div class="orow"><button class="opl" data-id="${esc(o.id)}">📋 الدفعات (${paysOf(o).length})</button></div><div class="oplist hide" id="pl-${esc(o.id)}">${paysOf(o).map(p=>`<div class="orow" style="justify-content:space-between"><small><bdi>${dm(p.d)}</bdi> · ${esc(p.by||'')} · ${fmt(p.a)} ${SYM[o.cur]}</small><button class="opd" data-id="${esc(p.id)}">✕</button></div>`).join('')}</div>`})()}
+        ${o.lp?`<small>آخر دورة انسدّت: <bdi>${dm(o.lp.d)}</bdi>${o.lp.parts?' · '+esc(o.lp.parts):''}</small>`:''}
         <div class="orow"><button class="oed" data-id="${esc(o.id)}">✎ عدّل</button><button class="odl" data-id="${esc(o.id)}">✕ احذف</button></div></div>
-      <div class="ova"><span class="a">${fmt(o.amt)} ${SYM[o.cur]}</span><button class="oact opay" data-id="${esc(o.id)}">✅ دفعته</button></div></div>`}).join('');
+      <div class="ova"><span class="a">${fmt(o.amt)} ${SYM[o.cur]}</span><button class="oact opay" data-id="${esc(o.id)}">💵 دفعة</button></div></div>`}).join('');
   return h;
 }
 function oformHTML(){
@@ -1011,19 +1024,31 @@ function bindObl(){
   const b=$('hbody');
   if($('o-new'))$('o-new').onclick=()=>{oform={n:'',amt:'',cur:'ILS',rep:'yearly',own:myUid(),due:''};renderHouse();$('o-n').focus()};
   b.querySelectorAll('.oed').forEach(x=>x.onclick=()=>{const o=sh.obl[x.dataset.id];if(!o)return;oform={...o};renderHouse();window.scrollTo(0,0)});
-  b.querySelectorAll('.odl').forEach(x=>x.onclick=()=>{const o=sh.obl[x.dataset.id];if(!o||!confirm(`تحذف "${o.n}"؟ رح تنحذف عند الكل.`))return;sdel('obl',o.id);renderShared();sync()});
+  b.querySelectorAll('.odl').forEach(x=>x.onclick=()=>{const o=sh.obl[x.dataset.id];if(!o||!confirm(`تحذف "${o.n}"؟ رح تنحذف عند الكل.`))return;Object.values(sh.pays||{}).filter(p=>p.oid===o.id).forEach(p=>sdel('pays',p.id));sdel('obl',o.id);renderShared();sync()});
+  b.querySelectorAll('.opl').forEach(x=>x.onclick=()=>{const el=$('pl-'+x.dataset.id);if(el)el.classList.toggle('hide')});
+  b.querySelectorAll('.opd').forEach(x=>x.onclick=()=>{const p=sh.pays[x.dataset.id];if(!p)return;
+    if(!confirm(`تحذف دفعة ${fmt(p.a)} تبعت ${p.by||''}؟ (إذا انسجّلت كمصروف، المصروف بيضل وبتحذفه من "الشهر")`))return;sdel('pays',p.id);renderShared();sync()});
   b.querySelectorAll('.opay').forEach(x=>x.onclick=()=>{
     const o=sh.obl[x.dataset.id];if(!o)return;
     const oc=(data.settings.oblCat||{})[o.id],cat=(data.cats.find(c=>c.id===oc)||data.cats.find(c=>c.id==='bills')||data.cats.find(c=>c.id==='other')).id;
-    const adv=(a,c)=>{
-      const lp={d:localISO(new Date()),by:sh.name,a,c};
-      if(o.rep==='once'){sdel('obl',o.id);renderShared();sync()}
-      else sput('obl',{...o,due:nextDue(o),lp});
+    const rem=remOf(o);
+    const addPay=(amt,cur,date)=>{
+      const a=Math.round(conv(amt,cur,o.cur,date)*100)/100;
+      sput('pays',{id:'p'+uid(),oid:o.id,cy:cyc(o),a,by:sh.name,u:myUid(),d:date});
+      const cur2=sh.obl[o.id];if(!cur2)return;
+      if(paidOf(cur2)>=cur2.amt-0.009){
+        const lp={d:date,by:sh.name,a:cur2.amt,c:cur2.cur,parts:paysOf(cur2).length>1||paysOf(cur2)[0].by!==sh.name?partsTxt(cur2).replace(/&[^;]+;/g,''):''};
+        paysOf(cur2).forEach(p=>sdel('pays',p.id));
+        if(cur2.rep==='once'){sdel('obl',cur2.id);renderShared();sync()}
+        else sput('obl',{...cur2,due:nextDue(cur2),cy:'c'+uid(),lp});
+        toast(cur2.rep==='once'?'اكتمل الدفع وانشال ✓':`اكتمل ✓ الموعد الجاي ${fullDate(nextDue(cur2))}`);
+      }else toast(`انسجّلت ✓ ضايل ${fmt(remOf(cur2))} ${SYM[cur2.cur]}`);
     };
-    openPay({title:'✅ '+o.n,desc:o.rep==='once'?'بعد الدفع بينشال الالتزام من القائمة.':`الموعد الجاي بيصير ${fullDate(nextDue(o))}.`,
-      amt:o.amt,cur:o.cur,cat,note:o.n,skip:'دفعته بدون ما أسجّل مصروف عندي',
-      ok:e=>{(data.settings.oblCat=data.settings.oblCat||{})[o.id]=e.cat;persist();adv(e.amt,e.cur);toast('انسجّل ✓')},
-      onSkip:()=>{adv(o.amt,o.cur);toast('انسجّل إنه انْدفع ✓')}});
+    openPay({title:'💵 دفعة على: '+o.n,desc:`ضايل ${fmt(rem)} ${SYM[o.cur]} من ${fmt(o.amt)}. اكتب قديش دفعت هلأ.`,
+      amt:'',cur:o.cur,cat,note:o.n,skip:'سجّل الدفعة بدون مصروف عندي',
+      ok:e=>{(data.settings.oblCat=data.settings.oblCat||{})[o.id]=e.cat;persist();addPay(e.amt,e.cur,e.date)},
+      onSkip:v=>addPay(v.amt,v.cur,v.date)});
+    $('pay-amt').placeholder=fmt(rem);
   });
   if(!oform)return;
   const dd=$('o-date'),upd=()=>{$('o-date-txt').textContent=dd.value?fullDate(dd.value):'اختار التاريخ'};
@@ -1040,6 +1065,7 @@ function bindObl(){
     if(!oform.due){err('اختار موعد الدفعة');return}
     const o={id:oform.id||'o'+uid(),n,amt,cur:oform.cur,due:oform.due,dd:Number(oform.due.slice(8)),rep:oform.rep,own:oform.own||myUid(),by:oform.by||sh.name};
     if(oform.lp)o.lp=oform.lp;
+    o.cy=oform.cy||(oform.id&&sh.obl[oform.id]?sh.obl[oform.id].due:'c'+uid());
     oform=null;sput('obl',o);toast('انحفظ ✓');
   };
 }
@@ -1047,7 +1073,7 @@ function bindObl(){
 // ---- pay overlay (logs an expense locally) ----
 function openPay(o){
   payCb=o;$('pay-t').textContent=o.title;$('pay-p').textContent=o.desc||'';
-  $('pay-amt').value=o.amt||'';payCur=o.cur||'ILS';renderPayCur();
+  $('pay-amt').value=o.amt||'';$('pay-amt').placeholder='0';payCur=o.cur||'ILS';renderPayCur();
   $('pay-cat').innerHTML=data.cats.map(c=>`<option value="${esc(c.id)}"${c.id===o.cat?' selected':''}>${esc(c.i)} ${esc(c.n)}</option>`).join('');
   $('pay-date').value=localISO(new Date());$('pay-note').value=o.note||'';
   $('pay-skip').textContent=o.skip||'';$('pay-skip').classList.toggle('hide',!o.skip);
@@ -1056,7 +1082,12 @@ function openPay(o){
 function renderPayCur(){document.querySelectorAll('#pay .pcur').forEach(b=>b.classList.toggle('on',b.dataset.c===payCur))}
 document.querySelectorAll('#pay .pcur').forEach(b=>b.onclick=()=>{payCur=b.dataset.c;renderPayCur()});
 $('pay-cancel').onclick=()=>{$('pay').classList.add('hide');payCb=null};
-$('pay-skip').onclick=()=>{const c=payCb;$('pay').classList.add('hide');payCb=null;if(c&&c.onSkip)c.onSkip()};
+$('pay-skip').onclick=()=>{
+  const amt=toNum($('pay-amt').value),date=$('pay-date').value;
+  if(!(amt>0)){toast('اكتب المبلغ');return}
+  if(!date){toast('اختار التاريخ');return}
+  const c=payCb;$('pay').classList.add('hide');payCb=null;if(c&&c.onSkip)c.onSkip({amt,cur:payCur,date});
+};
 $('pay-ok').onclick=()=>{
   const amt=toNum($('pay-amt').value),date=$('pay-date').value;
   if(!(amt>0)){toast('اكتب المبلغ');return}
