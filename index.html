@@ -456,9 +456,13 @@ function pLabel(p){
   return{t:'<bdi>'+MONTH_FULL[Number(p.start.slice(5,7))-1]+' '+p.start.slice(0,4)+'</bdi>',s:'من '+dm(p.start)+' لـ '+(p.end?dm(p.end):'هلأ')};
 }
 const cashFx=m=>!DK[m.kind].opt||m.cash;
-const pName=id=>{const p=data.people.find(x=>x.id===id);return p?p.n:'؟'};
-function netOf(pid,upTo){const r={USD:0,ILS:0};for(const m of data.dmoves)if(m.pid===pid&&(!upTo||m.date<=upTo))r[m.cur]+=DK[m.kind].net*m.amt;return r}
-function debtTotals(){const owe={USD:0,ILS:0},owed={USD:0,ILS:0};data.people.forEach(p=>{const n=netOf(p.id);for(const c in n){if(n[c]>0.004)owed[c]+=n[c];else if(n[c]<-0.004)owe[c]-=n[c]}});return{owe,owed}}
+const shOn=()=>!!(sh&&sh.code);
+const dPeople=()=>[...data.people,...(shOn()?Object.values(sh.dpeople||{}).map(p=>({...p,shared:true})):[])];
+const dMoves=()=>[...data.dmoves,...(shOn()?Object.values(sh.dmv||{}):[])];
+const myDm=()=>[...data.dmoves,...(shOn()?Object.values(sh.dmv||{}).filter(m=>isMe(m.u)):[])];
+const pName=id=>{const p=dPeople().find(x=>x.id===id);return p?p.n:'؟'};
+function netOf(pid,upTo){const r={USD:0,ILS:0};for(const m of dMoves())if(m.pid===pid&&(!upTo||m.date<=upTo))r[m.cur]+=DK[m.kind].net*m.amt;return r}
+function debtTotals(){const owe={USD:0,ILS:0},owed={USD:0,ILS:0};dPeople().forEach(p=>{const n=netOf(p.id);for(const c in n){if(n[c]>0.004)owed[c]+=n[c];else if(n[c]<-0.004)owe[c]-=n[c]}});return{owe,owed}}
 const curTxt=o=>{const t=[o.USD>0.004?fmt(o.USD)+' $':'',o.ILS>0.004?fmt(o.ILS)+' ₪':''].filter(Boolean);return t.length?t.join(' · '):'0'};
 function netTxt(n){
   const t=[];for(const c of ['USD','ILS']){const v=n[c];if(Math.abs(v)>0.004)t.push(`<span class="${v>0?'pos-t':'neg-t'}">${v>0?'إلك':'عليك'} ${fmt(Math.abs(v))} ${SYM[c]}</span>`)}
@@ -470,7 +474,7 @@ function balanceAt(end){
   for(const x of data.incomes)if(x.date<=end){if(x.cur==='USD')bu+=x.amt;else bi+=x.amt}
   for(const e of data.entries)if(e.date<=end){if(e.cur==='USD')bu-=e.amt;else bi-=e.amt}
   for(const a of data.adjusts)if(a.date<=end){bu+=a.usd;bi+=a.ils}
-  for(const m of data.dmoves)if(m.date<=end&&cashFx(m)){const v=DK[m.kind].cash*m.amt;if(m.cur==='USD')bu+=v;else bi+=v}
+  for(const m of myDm())if(m.date<=end&&cashFx(m)){const v=DK[m.kind].cash*m.amt;if(m.cur==='USD')bu+=v;else bi+=v}
   return[bu,bi];
 }
 function renderSub(){
@@ -486,7 +490,7 @@ function renderMonth(){
   $('mname').innerHTML=lb.t+'<small>'+lb.s+'</small>';
   $('prev').disabled=viewIdx===0;$('next').disabled=viewIdx===ps.length-1;
   $('prev').style.opacity=viewIdx===0?.35:1;$('next').style.opacity=viewIdx===ps.length-1?.35:1;
-  const list=data.entries.filter(e=>inP(e.date,p)),fx=data.exchanges.filter(x=>inP(x.date,p)),incs=data.incomes.filter(x=>inP(x.date,p)),adj=data.adjusts.filter(x=>inP(x.date,p)),dmv=data.dmoves.filter(x=>inP(x.date,p));
+  const list=data.entries.filter(e=>inP(e.date,p)),fx=data.exchanges.filter(x=>inP(x.date,p)),incs=data.incomes.filter(x=>inP(x.date,p)),adj=data.adjusts.filter(x=>inP(x.date,p)),dmv=myDm().filter(x=>inP(x.date,p));
   const totI=list.reduce((s,e)=>s+toILS(e.amt,e.cur,e.date),0),totU=list.reduce((s,e)=>s+toUSD(e.amt,e.cur,e.date),0);
   const paidI=list.filter(e=>e.cur==='ILS').reduce((s,e)=>s+e.amt,0),paidU=list.filter(e=>e.cur==='USD').reduce((s,e)=>s+e.amt,0);
   const sal=incs.filter(x=>x.salary),extras=incs.filter(x=>!x.salary);
@@ -497,7 +501,7 @@ function renderMonth(){
   let h=`<div class="card wallet"><div class="wl">${p.end&&!inP(today,p)?'كان معك بآخر هالفترة':'معك هلأ'}</div>
     <div class="two"><div><small>دولار</small><b>${fmt(bu,0)} $</b></div><div><small>شيكل</small><b>${fmt(bi,0)} ₪</b></div></div>
     <div class="tot">المجموع ≈ ${fmt(bi+bu*rt,0)} ₪ · ${fmt(bu+bi/rt,0)} $</div>
-    ${(()=>{if(!data.dmoves.length)return'';const t=debtTotals();return`<div class="wdebt">ديون عليك: ${curTxt(t.owe)} &nbsp;|&nbsp; إلك: ${curTxt(t.owed)}</div>`})()}
+    ${(()=>{if(!dMoves().length)return'';const t=debtTotals();return`<div class="wdebt">ديون عليك: ${curTxt(t.owe)} &nbsp;|&nbsp; إلك: ${curTxt(t.owed)}</div>`})()}
     ${isCur?walletObl(bi+bu*rt):''}
     ${isCur?'<button id="recon">⚖️ طابق الرصيد</button>':''}</div>
   <div class="card">
@@ -566,7 +570,7 @@ function renderMonth(){
   $('mbody').querySelectorAll('.del').forEach(b=>b.onclick=()=>{
     const t=b.dataset.t,id=b.dataset.id;
     if(!confirm({x:'تحذف هالتصريف؟',i:'تحذف هالدخل؟',e:'تحذف هالمصروف؟',a:'تحذف هالتسوية؟',d:'تحذف حركة الدين؟'}[t]))return;
-    if(t==='d')data.dmoves=data.dmoves.filter(x=>x.id!==id);
+    if(t==='d'){if(shOn()&&sh.dmv&&sh.dmv[id]){sdel('dmv',id);sync();renderMonth();renderSub();toast('انحذف');return}data.dmoves=data.dmoves.filter(x=>x.id!==id)}
     else if(t==='a')data.adjusts=data.adjusts.filter(x=>x.id!==id);
     else if(t==='x')data.exchanges=data.exchanges.filter(x=>x.id!==id);
     else if(t==='i'){data.incomes=data.incomes.filter(x=>x.id!==id);viewIdx=null}
@@ -643,7 +647,7 @@ $('defrate').onchange=e=>{const v=toNum(e.target.value);if(v>0){data.settings.de
 $('csv').onclick=()=>{
   const q=v=>'"'+String(v).replace(/"/g,'""')+'"';
   const rows=[['التاريخ','النوع','المبلغ','العملة','سعر الصرف','بالشيكل','بالدولار','التصنيف','التفصيل','ملاحظة']];
-  const all=[...data.entries.map(e=>({...e,k:'e'})),...data.exchanges.map(x=>({...x,k:'x'})),...data.incomes.map(x=>({...x,k:'i'})),...data.adjusts.map(x=>({...x,k:'a'})),...data.dmoves.map(x=>({...x,k:'d'}))].sort((a,b)=>a.date.localeCompare(b.date));
+  const all=[...data.entries.map(e=>({...e,k:'e'})),...data.exchanges.map(x=>({...x,k:'x'})),...data.incomes.map(x=>({...x,k:'i'})),...data.adjusts.map(x=>({...x,k:'a'})),...myDm().map(x=>({...x,k:'d'}))].sort((a,b)=>a.date.localeCompare(b.date));
   all.forEach(e=>{
     if(e.k==='d')rows.push([e.date,'دين: '+DK[e.kind].t,e.amt,e.cur,'','','','',pName(e.pid),e.note||'']);
     else if(e.k==='a'){if(e.usd)rows.push([e.date,'تسوية',e.usd,'USD','','','','','','']);if(e.ils)rows.push([e.date,'تسوية',e.ils,'ILS','','','','','',''])}
@@ -669,28 +673,33 @@ $('restore').onchange=ev=>{
 
 // ---- debts ----
 function renderDebt(){
-  if(debtPid&&!data.people.find(p=>p.id===debtPid))debtPid=null;
+  if(debtPid&&!dPeople().find(p=>p.id===debtPid))debtPid=null;
   if(debtPid)return renderPerson();
   const t=debtTotals();
   let h=`<div class="dsum"><div class="owe"><small>عليّ</small><b>${curTxt(t.owe)}</b></div><div class="owed"><small>إلي عند الناس</small><b>${curTxt(t.owed)}</b></div></div>`;
-  const ps=data.people.map(p=>({...p,net:netOf(p.id)})).sort((a,b)=>(Math.abs(b.net.USD)+Math.abs(b.net.ILS))-(Math.abs(a.net.USD)+Math.abs(a.net.ILS)));
+  const ps=dPeople().map(p=>({...p,net:netOf(p.id)})).sort((a,b)=>(Math.abs(b.net.USD)+Math.abs(b.net.ILS))-(Math.abs(a.net.USD)+Math.abs(a.net.ILS)));
   if(!ps.length)h+=`<div class="empty">ما في ديون مسجّلة. ضيف أول شخص من تحت.</div>`;
-  h+=ps.map(p=>`<div class="prow" data-id="${esc(p.id)}"><span class="n">👤 ${esc(p.n)}</span><span class="st">${netTxt(p.net)}</span></div>`).join('');
+  h+=ps.map(p=>`<div class="prow" data-id="${esc(p.id)}"><span class="n">${p.shared?'🏠':'👤'} ${esc(p.n)}</span><span class="st">${netTxt(p.net)}</span></div>`).join('');
   h+=`<div class="addp"><input id="newp" placeholder="اسم الشخص"><button id="addp">+ ضيف</button></div>`;
+  if(shOn())h+=`<label class="chk"><input type="checkbox" id="newp-sh"> 🏠 مشترك مع البيت (بيطلع عند أهل بيتك)</label>`;
+  else h+=`<p class="hp" style="margin-top:10px">🏠 بتقدر تخلّي الديون مشتركة مع أهل بيتك إذا ربطت التلفون ببيت من تبويب "البيت".</p>`;
+  if(ps.some(p=>p.shared))h+=`<p class="hp" style="margin-top:8px">🏠 = دين مشترك. كل حركة بتأثر بس على رصيد اللي سجّلها.</p>`;
   $('dbody').innerHTML=h;
   $('dbody').querySelectorAll('.prow').forEach(r=>r.onclick=()=>{debtPid=r.dataset.id;renderDebt();window.scrollTo(0,0)});
   $('addp').onclick=()=>{
     const n=$('newp').value.trim();if(!n){$('newp').focus();return}
-    const ex=data.people.find(p=>p.n===n);
-    if(ex){debtPid=ex.id}else{const p={id:'p'+uid(),n};data.people.push(p);persist();debtPid=p.id}
+    const ex=dPeople().find(p=>p.n===n);
+    if(ex){debtPid=ex.id}else if($('newp-sh')&&$('newp-sh').checked){const p={id:'p'+uid(),n,by:sh.name};debtPid=p.id;sput('dpeople',p)}
+    else{const p={id:'p'+uid(),n};data.people.push(p);persist();debtPid=p.id}
     renderDebt();
   };
 }
 function renderPerson(){
-  const p=data.people.find(x=>x.id===debtPid),net=netOf(p.id);
-  const mv=data.dmoves.filter(m=>m.pid===p.id).sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id));
-  let h=`<div class="ptop"><button id="pback">رجوع</button><h2>👤 ${esc(p.n)}</h2><button id="pdel" aria-label="احذف الشخص">🗑</button></div>
-  <div class="card pstat">${netTxt(net)}</div>
+  const p=dPeople().find(x=>x.id===debtPid),net=netOf(p.id);
+  const mv=dMoves().filter(m=>m.pid===p.id).sort((a,b)=>b.date.localeCompare(a.date)||b.id.localeCompare(a.id));
+  let h=`<div class="ptop"><button id="pback">رجوع</button><h2>${p.shared?'🏠':'👤'} ${esc(p.n)}</h2><button id="pdel" aria-label="احذف الشخص">🗑</button></div>
+  <div class="card pstat">${netTxt(net)}${p.shared?'<div class="hp" style="font-weight:400;margin-top:6px">🏠 مشترك مع البيت</div>':''}</div>
+  ${!p.shared&&shOn()?'<button class="newo" id="pshare" style="margin-top:0;margin-bottom:12px">🏠 خلّيه مشترك مع البيت</button>':''}
   <div class="card" style="margin-top:12px">
     <div class="kinds" style="margin-top:0">${Object.keys(DK).map(k=>`<button class="sub${dkind===k?' sel':''}" data-k="${k}">${DK[k].i} ${DK[k].t}</button>`).join('')}</div>
     <div class="amount-wrap" style="margin-top:12px"><input id="d-amt" class="big" type="text" inputmode="decimal" placeholder="0" style="font-size:2rem">
@@ -702,14 +711,24 @@ function renderPerson(){
   </div>`;
   if(mv.length){
     h+=`<div class="sec-title">الحركات</div>`+mv.map(m=>{const k=DK[m.kind];return`<div class="item"><span class="dot" style="background:${k.net>0?'var(--olive-2)':'var(--red)'}"></span>
-      <div class="t"><div>${k.i} ${k.t}</div><small><bdi>${fullDate(m.date)}</bdi>${m.note?' · '+esc(m.note):''}${cashFx(m)?'':' · بدون تأثير عالرصيد'}</small></div>
+      <div class="t"><div>${k.i} ${k.t}</div><small><bdi>${fullDate(m.date)}</bdi>${m.by?' · '+esc(m.by):''}${m.note?' · '+esc(m.note):''}${cashFx(m)?'':' · بدون تأثير عالرصيد'}</small></div>
       <span class="a">${fmt(m.amt)} ${SYM[m.cur]}</span><button class="del" data-id="${m.id}" aria-label="احذف">✕</button></div>`}).join('');
   }
   $('dbody').innerHTML=h;
   const dd=$('d-date'),upd=()=>{$('d-date-txt').textContent=dd.value?fullDate(dd.value):'—'};
   dd.value=localISO(new Date());upd();dd.onchange=upd;dd.oninput=upd;
   $('pback').onclick=()=>{debtPid=null;renderDebt()};
-  $('pdel').onclick=()=>{if(!confirm(`تحذف "${p.n}" وكل حركاته؟`))return;data.people=data.people.filter(x=>x.id!==p.id);data.dmoves=data.dmoves.filter(m=>m.pid!==p.id);persist();debtPid=null;renderDebt()};
+  $('pdel').onclick=()=>{
+    if(p.shared){if(!confirm(`تحذف "${p.n}" وكل حركاته؟ رح ينحذف عند الكل.`))return;
+      Object.values(sh.dmv||{}).filter(m=>m.pid===p.id).forEach(m=>sdel('dmv',m.id));sdel('dpeople',p.id);debtPid=null;renderShared();sync();renderDebt();renderSub();return}
+    if(!confirm(`تحذف "${p.n}" وكل حركاته؟`))return;data.people=data.people.filter(x=>x.id!==p.id);data.dmoves=data.dmoves.filter(m=>m.pid!==p.id);persist();debtPid=null;renderDebt()};
+  if($('pshare'))$('pshare').onclick=()=>{
+    if(!confirm(`تخلّي "${p.n}" مشترك؟ هو وكل حركاته رح يطلعوا عند أهل بيتك.`))return;
+    sput('dpeople',{id:p.id,n:p.n,by:sh.name});
+    data.dmoves.filter(m=>m.pid===p.id).forEach(m=>sput('dmv',{...m,u:myUid(),by:sh.name}));
+    data.people=data.people.filter(x=>x.id!==p.id);data.dmoves=data.dmoves.filter(m=>m.pid!==p.id);persist();
+    toast('صار مشترك ✓');renderDebt();
+  };
   $('dbody').querySelectorAll('.kinds .sub').forEach(b=>b.onclick=()=>{const a=$('d-amt').value,n=$('d-note').value,dt=dd.value;dkind=b.dataset.k;renderPerson();$('d-amt').value=a;$('d-note').value=n;$('d-date').value=dt;$('d-date').onchange()});
   $('dbody').querySelectorAll('.dc').forEach(b=>b.onclick=()=>{dcur=b.dataset.c;$('dbody').querySelectorAll('.dc').forEach(x=>x.classList.toggle('on',x===b))});
   $('d-save').onclick=()=>{
@@ -717,9 +736,11 @@ function renderPerson(){
     if(!dd.value){toast('اختار التاريخ');return}
     const m={id:uid(),pid:p.id,kind:dkind,amt,cur:dcur,date:dd.value,note:$('d-note').value.trim()};
     if(DK[dkind].opt)m.cash=$('d-cash').checked;
+    if(p.shared){sput('dmv',{...m,u:myUid(),by:sh.name});toast('انحفظ ✓');renderPerson();renderSub();return}
     data.dmoves.push(m);if(persist()){toast('انحفظ ✓');renderPerson();renderSub()}
   };
-  $('dbody').querySelectorAll('.item .del').forEach(b=>b.onclick=()=>{if(!confirm('تحذف هالحركة؟'))return;data.dmoves=data.dmoves.filter(m=>m.id!==b.dataset.id);persist();renderPerson()});
+  $('dbody').querySelectorAll('.item .del').forEach(b=>b.onclick=()=>{if(!confirm(p.shared?'تحذف هالحركة؟ رح تنحذف عند الكل.':'تحذف هالحركة؟'))return;
+    const id=b.dataset.id;if(p.shared){sdel('dmv',id);sync()}else{data.dmoves=data.dmoves.filter(m=>m.id!==id);persist()}renderPerson();renderSub()});
 }
 
 // ---- swipe between months ----
@@ -757,7 +778,7 @@ const PLACES=[{id:'super',n:'سوبرماركت',i:'🛒'},{id:'veg',n:'خضرة
 const REP={once:'مرة وحدة',monthly:'شهري',yearly:'سنوي'};
 let sh,syncing=false,syncAgain=false,syncErr='',hview='shop',shopPlace='super',oform=null,payCur='ILS',payCb=null;
 
-function sblank(){return{code:'',name:'',joined:'',shop:{},obl:{},people:{},pays:{},queue:[],last:0}}
+function sblank(){return{code:'',name:'',joined:'',shop:{},obl:{},people:{},pays:{},dpeople:{},dmv:{},queue:[],last:0}}
 function sload(){try{sh={...sblank(),...(JSON.parse(localStorage.getItem(SKEY))||{})}}catch(e){sh=sblank()}}
 function ssave(){try{localStorage.setItem(SKEY,JSON.stringify(sh))}catch(e){}}
 function hhFromSettings(){const s=data.settings;if(!sh.code&&s.hh){sh.code=s.hh;sh.name=sh.name||s.hhName||'';sh.joined='';ssave()}}
@@ -826,7 +847,7 @@ async function sync(){
       if(q.del)await api('DELETE',p);else await api('PATCH',p,{fields:ff(q.v)});
       sh.queue=sh.queue.filter(x=>x!==q);ssave();
     }
-    for(const col of ['shop','obl','people','pays']){
+    for(const col of ['shop','obl','people','pays','dpeople','dmv']){
       const j=await api('GET',`/households/${sh.code}/${col}?pageSize=300`),m={};
       (j.documents||[]).forEach(d=>{const id=d.name.split('/').pop();m[id]={...pf(d.fields||{}),id}});
       sh[col]=m;
@@ -878,6 +899,10 @@ function renderShared(bg){
   renderAlerts();renderBadge();renderHset();
   if($('v-house').classList.contains('on')){if(bg&&houseBusy()){hPending=true;renderHstat()}else renderHouse()}
   if($('v-month').classList.contains('on'))renderMonth();
+  if($('v-debt').classList.contains('on')){const a=document.activeElement,busy=a&&$('dbody').contains(a)&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName);
+    if(!(bg&&busy)){const k=$('d-amt')?{a:$('d-amt').value,n:$('d-note').value,d:$('d-date').value}:null;renderDebt();
+      if(k&&$('d-amt')){$('d-amt').value=k.a;$('d-note').value=k.n;$('d-date').value=k.d;$('d-date').onchange()}}}
+  if(bg)renderSub();
 }
 function renderBadge(){const n=sh.code?shopOpen().length:0;$('hbadge').textContent=n;$('hbadge').classList.toggle('hide',!n)}
 function renderAlerts(){
