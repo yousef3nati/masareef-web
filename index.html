@@ -189,7 +189,10 @@
   .lov.hide{display:none}
   .lbox{background:var(--paper);width:100%;max-width:520px;max-height:88vh;overflow:auto;border-radius:18px 18px 0 0;padding:18px 16px 26px}
   .lbox h2{font-size:1.05rem;margin-bottom:4px}.lbox .hp{margin-bottom:10px}
-  .l-cl{width:100%;margin-top:8px}
+  .l-cl{width:100%;margin-top:10px;padding:13px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);font-size:1rem;cursor:pointer}
+  .l-top{position:sticky;top:-18px;margin:-18px -16px 8px;padding:10px 12px 6px;background:var(--paper);display:flex;align-items:center;justify-content:center;z-index:1}
+  .l-grip{width:44px;height:5px;border-radius:3px;background:var(--line)}
+  .l-x{position:absolute;left:12px;top:6px;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--muted);cursor:pointer;font-size:.9rem}
   .l-in{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--card);margin-bottom:10px;outline:none;color:var(--ink)}
   .l-lbl{font-size:.8rem;color:var(--muted);margin:8px 0 6px}
   .l-emo{display:flex;flex-wrap:wrap;gap:6px}
@@ -1037,7 +1040,7 @@ function lAgoTxt(a){if(a===null)return'جديدة';if(a===0)return'اليوم';i
 function lunchHTML(){
   const ds=lWeek(lwOff),t=ltoday(),tp=lPlan()[t],td=tp&&lDish(tp.did);
   if(!lDishes().length)return`<div class="card"><h2 class="ht">🍲 غدا الأسبوع</h2><p class="hp">ضيفوا الأكلات اللي بتحبوها، وبعدين خططوا الأسبوع وطلّعوا المكونات للطلبات بكبسة.</p>
-    <button class="save" id="l-seed">ضيف 13 أكلة جاهزة (مقلوبة، ملوخية، مسخن…)</button><button class="skip" id="l-new0" style="width:100%;margin-top:8px">أو ضيف أكلاتكم من الصفر</button></div>`;
+    <button class="save" id="l-seed">ضيف 13 أكلة جاهزة (مقلوبة، ملوخية، مسخن…)</button><button class="l-cl" id="l-new0">أو ضيف أكلاتكم من الصفر</button></div>`;
   let h=`<div class="l-seg2"><button class="on" data-lv="week">📅 الأسبوع</button><button data-lv="lib">🍲 أكلاتنا (${lDishes().length})</button></div>`;
   if(lwOff===0)h+=`<div class="card l-today"><span class="e">${td?td.e:'🤔'}</span><div><small>غدا اليوم · ${LDAYS[lDow(t)]}</small><b>${td?esc(td.n):'لسا ما قررتوا'}</b></div></div>`;
   h+=`<div class="l-wnav"><button class="l-nb" id="l-prev">›</button><div><b>${lwOff===0?'هالأسبوع':lwOff===1?'الأسبوع الجاي':lwOff===-1?'الأسبوع الماضي':''}</b><small>${dm(ds[0])} ← ${dm(ds[6])}</small></div><button class="l-nb" id="l-next">‹</button></div>
@@ -1096,12 +1099,14 @@ function lFill(){
   lWeek(lwOff).filter(k=>k>=t).forEach(k=>{if(!lPlan()[k]){const d=lSuggest(k);if(d){sh.plan[k]={id:k,did:d.id};lSet(k,d.id);n++}}});
   toast(n?`🎲 تعبّى ${n} يوم`:'الأسبوع معبّى');
 }
-function lSheet(html){$('lsheet').innerHTML=html;$('lov').classList.remove('hide')}
+function lSheet(html){const top=$('lov').classList.contains('hide')?0:$('lsheet').scrollTop;$('lsheet').innerHTML=`<div class="l-top"><span class="l-grip"></span><button class="l-x" id="l-x" aria-label="سكّر">✕</button></div>`+html;$('l-x').onclick=lClose;$('lov').classList.remove('hide');$('lsheet').scrollTop=top}
 function lClose(){$('lov').classList.add('hide')}
+$('lov').addEventListener('click',e=>{if(e.target===$('lov'))lClose()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')lClose()});
 function lOpenPicker(k){
   let q='';
   lSheet(`<h2>غدا ${LDAYS[lDow(k)]} ${dm(k)}</h2><p class="hp">مرتبة من الأقدم: اللي صرلكم أكتر ما أكلتوها فوق.</p>
-    <input class="l-in" id="l-q" placeholder="🔍 دوّر..."><div id="l-pl"></div><button class="skip l-cl" id="l-pc">إلغاء</button>`);
+    <input class="l-in" id="l-q" placeholder="🔍 دوّر..."><div id="l-pl"></div><button class="l-cl" id="l-pc">إلغاء</button>`);
   const draw=()=>{
     const l=lDishes().filter(x=>!q||x.n.includes(q)).sort((a,b)=>(lAgo(lLast(b))??999)-(lAgo(lLast(a))??999));
     $('l-pl').innerHTML=l.map(x=>{const a=lAgo(lLast(x));return`<div class="l-dl" data-id="${esc(x.id)}"><span class="e">${x.e}</span><div class="t"><b>${esc(x.n)}</b><small>${LCATS[x.c]||''}</small></div><span class="l-tag ${a===null||a>=14?'new':a<7?'rec':''}">${lAgoTxt(a)}</span></div>`}).join('')||'<p class="hp">ما في نتايج</p>';
@@ -1119,7 +1124,7 @@ function lOpenDish(id){
       ${o.c==='out'?'<p class="hp" style="margin-top:8px">أكل من برا ما إله مكونات.</p>':`<div class="l-lbl">المكونات (عشان تنضاف للطلبات)</div>
       <div class="l-ing">${o.ing.map((x,i)=>`<span>${esc(x)}<button data-i="${i}">✕</button></span>`).join('')||'<span style="border-style:dashed;color:var(--muted)">لسا ما في</span>'}</div>
       <div class="addp" style="margin-top:6px"><input id="l-ni" placeholder="مثلاً: دجاج (أو كذا وحدة بفاصلة)"><button id="l-ai">+</button></div>`}
-      <button class="save" id="l-ds">احفظ</button><button class="skip l-cl" id="l-dc">إلغاء</button>${s?'<button class="l-del" id="l-dd">🗑 احذف الأكلة</button>':''}`);
+      <button class="save" id="l-ds">احفظ</button><button class="l-cl" id="l-dc">إلغاء</button>${s?'<button class="l-del" id="l-dd">🗑 احذف الأكلة</button>':''}`);
     const keep=()=>{o.n=$('l-dn').value};
     $('lsheet').querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>{keep();o.e=b.dataset.e;draw()});
     $('lsheet').querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{keep();o.c=b.dataset.c;draw()});
@@ -1145,7 +1150,7 @@ function lOpenIngs(){
     const n=items.filter(x=>x.on).length;
     lSheet(`<h2>🛒 مكونات الأسبوع</h2><p class="hp">شيلوا الإشارة عن اللي عندكم بالبيت، والباقي بينضاف لطلبات البيت.</p>
       ${items.map((x,i)=>`<div class="l-ck${x.on?' on':' off'}" data-i="${i}"><span class="bx">${x.on?'✓':''}</span><div class="t"><b>${esc(x.n)}</b><small>لـ ${esc(x.f.join('، '))}${x.dup?' · موجود بالطلبات':''}</small></div></div>`).join('')}
-      <button class="save" id="l-is"${n?'':' disabled style="opacity:.5"'}>ضيف ${n} غرض للطلبات</button><button class="skip l-cl" id="l-ic">إلغاء</button>`);
+      <button class="save" id="l-is"${n?'':' disabled style="opacity:.5"'}>ضيف ${n} غرض للطلبات</button><button class="l-cl" id="l-ic">إلغاء</button>`);
     $('lsheet').querySelectorAll('.l-ck').forEach(b=>b.onclick=()=>{const x=items[+b.dataset.i];x.on=!x.on;draw()});
     $('l-is').onclick=()=>{items.filter(x=>x.on).forEach((x,i)=>sput('shop',{id:'i'+uid()+i,n:x.n,q:'',pl:lPlace(x.n),by:sh.name,done:false,c:Date.now()+i,from:x.f.join('، ')}));
       lClose();toast(`انضاف ${n} غرض ✓`);hview='shop';renderHouse()};
