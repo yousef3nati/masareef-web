@@ -943,7 +943,8 @@ function sdel(col,id){delete sh[col][id];sh.queue=sh.queue.filter(q=>!(q.col===c
 window.onAppResume=()=>{sync();if(typeof cloudPush==='function')cloudPush()};
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')sync()});
 window.addEventListener('online',()=>sync());
-setInterval(()=>{if(document.visibilityState==='visible'&&$('v-house').classList.contains('on'))sync()},30000);
+setInterval(()=>{if(document.visibilityState==='visible'&&$('v-house').classList.contains('on'))sync()},60000);
+window.onAppPause=()=>{try{if(typeof cloudPush==='function'&&cs&&cs.dirty){clearTimeout(markDirty.t);cloudPush()}if(sh&&sh.code&&sh.queue.length)sync()}catch(e){}return 1};
 
 // helpers
 const pnm=u=>u==='all'?'مشترك':(u===myUid()?'أنا':((sh.people[u]&&sh.people[u].n)||'؟'));
