@@ -259,6 +259,7 @@
     <div><small>دولار</small><input id="open-usd" class="rate-in" inputmode="decimal" placeholder="0"></div>
     <div><small>شيكل</small><input id="open-ils" class="rate-in" inputmode="decimal" placeholder="0"></div>
   </div>
+  <label class="chk"><input type="checkbox" id="debt-cash"> حركات الديون بتأثر على "معك هلأ" (استلفت بيزيد، سلّفت وسدّدت بينقص)</label>
 
   <h2>سعر الصرف الافتراضي</h2>
   <p>بينستخدم بس إذا ما في تصريف مسجّل قبل تاريخ المصروف.</p>
@@ -480,7 +481,7 @@ function balanceParts(end){
   for(const x of data.incomes)if(x.date<=end){if(x.cur==='USD')r.inc.u+=x.amt;else r.inc.i+=x.amt}
   for(const e of data.entries)if(e.date<=end){if(e.cur==='USD')r.exp.u-=e.amt;else r.exp.i-=e.amt}
   for(const a of data.adjusts)if(a.date<=end){r.adj.u+=a.usd;r.adj.i+=a.ils}
-  for(const m of myDm())if(m.date<=end&&cashFx(m)){const v=DK[m.kind].cash*m.amt;if(m.cur==='USD')r.debt.u+=v;else r.debt.i+=v}
+  if(data.settings.debtCash)for(const m of myDm())if(m.date<=end&&cashFx(m)){const v=DK[m.kind].cash*m.amt;if(m.cur==='USD')r.debt.u+=v;else r.debt.i+=v}
   return r;
 }
 function balanceAt(end){
@@ -489,7 +490,7 @@ function balanceAt(end){
   for(const x of data.incomes)if(x.date<=end){if(x.cur==='USD')bu+=x.amt;else bi+=x.amt}
   for(const e of data.entries)if(e.date<=end){if(e.cur==='USD')bu-=e.amt;else bi-=e.amt}
   for(const a of data.adjusts)if(a.date<=end){bu+=a.usd;bi+=a.ils}
-  for(const m of myDm())if(m.date<=end&&cashFx(m)){const v=DK[m.kind].cash*m.amt;if(m.cur==='USD')bu+=v;else bi+=v}
+  if(data.settings.debtCash)for(const m of myDm())if(m.date<=end&&cashFx(m)){const v=DK[m.kind].cash*m.amt;if(m.cur==='USD')bu+=v;else bi+=v}
   return[bu,bi];
 }
 function renderSub(){
@@ -505,7 +506,7 @@ function renderMonth(){
   $('mname').innerHTML=lb.t+'<small>'+lb.s+'</small>';
   $('prev').disabled=viewIdx===0;$('next').disabled=viewIdx===ps.length-1;
   $('prev').style.opacity=viewIdx===0?.35:1;$('next').style.opacity=viewIdx===ps.length-1?.35:1;
-  const list=data.entries.filter(e=>inP(e.date,p)),fx=data.exchanges.filter(x=>inP(x.date,p)),incs=data.incomes.filter(x=>inP(x.date,p)),adj=data.adjusts.filter(x=>inP(x.date,p)),dmv=myDm().filter(x=>inP(x.date,p));
+  const list=data.entries.filter(e=>inP(e.date,p)),fx=data.exchanges.filter(x=>inP(x.date,p)),incs=data.incomes.filter(x=>inP(x.date,p)),adj=data.adjusts.filter(x=>inP(x.date,p)),dmv=data.settings.debtCash?myDm().filter(x=>inP(x.date,p)):[];
   const totI=list.reduce((s,e)=>s+toILS(e.amt,e.cur,e.date),0),totU=list.reduce((s,e)=>s+toUSD(e.amt,e.cur,e.date),0);
   const paidI=list.filter(e=>e.cur==='ILS').reduce((s,e)=>s+e.amt,0),paidU=list.filter(e=>e.cur==='USD').reduce((s,e)=>s+e.amt,0);
   const sal=incs.filter(x=>x.salary),extras=incs.filter(x=>!x.salary);
@@ -650,9 +651,10 @@ function renderSet(){
     };
   });
   $('defrate').value=data.settings.defaultRate;
-  $('open-usd').value=data.settings.openUSD||'';$('open-ils').value=data.settings.openILS||'';
+  $('open-usd').value=data.settings.openUSD||'';$('open-ils').value=data.settings.openILS||'';$('debt-cash').checked=!!data.settings.debtCash;
   renderHset();renderCloud();
 }
+$('debt-cash').onchange=e=>{data.settings.debtCash=e.target.checked;persist();toast(e.target.checked?'الديون صارت تأثر عالرصيد':'الرصيد صار بدون الديون')};
 ['usd','ils'].forEach(c=>$('open-'+c).onchange=e=>{
   const k=c==='usd'?'openUSD':'openILS',v=toNum(e.target.value);
   data.settings[k]=v>0?v:0;persist();e.target.value=data.settings[k]||'';toast('انحفظ ✓');
@@ -728,7 +730,7 @@ function renderPerson(){
       <div class="curs"><button class="cur dc${dcur==='ILS'?' on':''}" data-c="ILS">₪</button><button class="cur dc${dcur==='USD'?' on':''}" data-c="USD">$</button></div></div>
     <div class="field"><div class="date-row"><div class="dpick"><span id="d-date-txt"></span><input id="d-date" type="date" aria-label="التاريخ"><span class="cal">📅</span></div></div></div>
     <div class="field"><input id="d-note" type="text" placeholder="ملاحظة (اختياري)"></div>
-    ${DK[dkind].opt?`<label class="chk"><input type="checkbox" id="d-cash" checked> ${dkind==='borrow'?'المبلغ دخل على رصيدي':'المبلغ طلع من رصيدي'} (شيلها إذا دين قديم)</label>`:''}
+    ${DK[dkind].opt&&data.settings.debtCash?`<label class="chk"><input type="checkbox" id="d-cash" checked> ${dkind==='borrow'?'المبلغ دخل على رصيدي':'المبلغ طلع من رصيدي'} (شيلها إذا دين قديم)</label>`:''}
     <button class="save" id="d-save">احفظ</button>
   </div>`;
   if(mv.length){
@@ -757,7 +759,7 @@ function renderPerson(){
     const amt=toNum($('d-amt').value);if(!(amt>0)){toast('اكتب المبلغ');return}
     if(!dd.value){toast('اختار التاريخ');return}
     const m={id:uid(),pid:p.id,kind:dkind,amt,cur:dcur,date:dd.value,note:$('d-note').value.trim()};
-    if(DK[dkind].opt)m.cash=$('d-cash').checked;
+    if(DK[dkind].opt)m.cash=$('d-cash')?$('d-cash').checked:true;
     if(p.shared){sput('dmv',{...m,u:myUid(),by:sh.name});toast('انحفظ ✓');renderPerson();renderSub();return}
     data.dmoves.push(m);if(persist()){toast('انحفظ ✓');renderPerson();renderSub()}
   };
