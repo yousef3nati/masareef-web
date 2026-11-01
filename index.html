@@ -96,6 +96,12 @@
   .chk{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:.9rem;color:var(--muted)}
   .chk input{width:20px;height:20px}
   .wdebt{margin-top:8px;font-size:.8rem;opacity:.85;text-align:center}
+  .winfo{margin-top:12px;background:rgba(255,255,255,.1);border-radius:10px;padding:10px 12px;font-size:.85rem;line-height:1.9}
+  .wnote{font-size:.72rem;opacity:.7;margin-top:2px}
+  .wdet{margin-top:10px;font-size:.8rem}
+  .wdet summary{cursor:pointer;opacity:.8;text-align:center;list-style:none}
+  .wdet summary::-webkit-details-marker{display:none}
+  .wrow{display:flex;justify-content:space-between;gap:8px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.12)}
   .dpick input{position:absolute;inset:0;opacity:0;width:100%!important;height:100%;padding:0!important;border:none!important}
   .income-row{display:flex;gap:8px;align-items:center;margin-top:14px;font-size:.9rem;color:var(--muted);flex-wrap:wrap}
   .income-row input{width:110px;padding:8px 10px;border:1px solid var(--line);border-radius:8px}
@@ -462,11 +468,20 @@ const dMoves=()=>[...data.dmoves,...(shOn()?Object.values(sh.dmv||{}):[])];
 const myDm=()=>[...data.dmoves,...(shOn()?Object.values(sh.dmv||{}).filter(m=>isMe(m.u)):[])];
 const pName=id=>{const p=dPeople().find(x=>x.id===id);return p?p.n:'؟'};
 function netOf(pid,upTo){const r={USD:0,ILS:0};for(const m of dMoves())if(m.pid===pid&&(!upTo||m.date<=upTo))r[m.cur]+=DK[m.kind].net*m.amt;return r}
-function debtTotals(){const owe={USD:0,ILS:0},owed={USD:0,ILS:0};dPeople().forEach(p=>{const n=netOf(p.id);for(const c in n){if(n[c]>0.004)owed[c]+=n[c];else if(n[c]<-0.004)owe[c]-=n[c]}});return{owe,owed}}
+function debtTotals(only){const owe={USD:0,ILS:0},owed={USD:0,ILS:0};dPeople().filter(p=>only===undefined||!!p.shared===only).forEach(p=>{const n=netOf(p.id);for(const c in n){if(n[c]>0.004)owed[c]+=n[c];else if(n[c]<-0.004)owe[c]-=n[c]}});return{owe,owed}}
 const curTxt=o=>{const t=[o.USD>0.004?fmt(o.USD)+' $':'',o.ILS>0.004?fmt(o.ILS)+' ₪':''].filter(Boolean);return t.length?t.join(' · '):'0'};
 function netTxt(n){
   const t=[];for(const c of ['USD','ILS']){const v=n[c];if(Math.abs(v)>0.004)t.push(`<span class="${v>0?'pos-t':'neg-t'}">${v>0?'إلك':'عليك'} ${fmt(Math.abs(v))} ${SYM[c]}</span>`)}
   return t.length?t.join('<br>'):'<span style="color:var(--muted)">خالص ✓</span>';
+}
+function balanceParts(end){
+  const z=()=>({u:0,i:0}),r={open:{u:data.settings.openUSD||0,i:data.settings.openILS||0},inc:z(),exp:z(),fx:z(),debt:z(),adj:z()};
+  for(const x of data.exchanges)if(x.date<=end){r.fx.u-=x.usd;r.fx.i+=x.usd*x.rate}
+  for(const x of data.incomes)if(x.date<=end){if(x.cur==='USD')r.inc.u+=x.amt;else r.inc.i+=x.amt}
+  for(const e of data.entries)if(e.date<=end){if(e.cur==='USD')r.exp.u-=e.amt;else r.exp.i-=e.amt}
+  for(const a of data.adjusts)if(a.date<=end){r.adj.u+=a.usd;r.adj.i+=a.ils}
+  for(const m of myDm())if(m.date<=end&&cashFx(m)){const v=DK[m.kind].cash*m.amt;if(m.cur==='USD')r.debt.u+=v;else r.debt.i+=v}
+  return r;
 }
 function balanceAt(end){
   let bu=data.settings.openUSD||0,bi=data.settings.openILS||0;
@@ -501,8 +516,15 @@ function renderMonth(){
   let h=`<div class="card wallet"><div class="wl">${p.end&&!inP(today,p)?'كان معك بآخر هالفترة':'معك هلأ'}</div>
     <div class="two"><div><small>دولار</small><b>${fmt(bu,0)} $</b></div><div><small>شيكل</small><b>${fmt(bi,0)} ₪</b></div></div>
     <div class="tot">المجموع ≈ ${fmt(bi+bu*rt,0)} ₪ · ${fmt(bu+bi/rt,0)} $</div>
-    ${(()=>{if(!dMoves().length)return'';const t=debtTotals();return`<div class="wdebt">ديون عليك: ${curTxt(t.owe)} &nbsp;|&nbsp; إلك: ${curTxt(t.owed)}</div>`})()}
-    ${isCur?walletObl(bi+bu*rt):''}
+    ${(()=>{
+      const L=[];
+      if(isCur&&sh&&sh.code){const d=mineDue(30);if(d>0)L.push(`📅 التزامات عليك خلال 30 يوم: <b>${fmt(d,0)} ₪</b>`)}
+      if(data.people.length){const t=debtTotals(false);L.push(`👤 ديونك: عليك <b>${curTxt(t.owe)}</b> · إلك <b>${curTxt(t.owed)}</b>`)}
+      if(dPeople().some(p=>p.shared)){const t=debtTotals(true);L.push(`🏠 ديون البيت: علينا <b>${curTxt(t.owe)}</b> · إلنا <b>${curTxt(t.owed)}</b>`)}
+      return L.length?`<div class="winfo">${L.map(x=>`<div>${x}</div>`).join('')}<div class="wnote">هدول للعلم بس، مش منقوصين من الرصيد فوق.</div></div>`:'';
+    })()}
+    ${(()=>{const r=balanceParts(end),row=(n,v)=>(Math.abs(v.u)>0.004||Math.abs(v.i)>0.004)?`<div class="wrow"><span>${n}</span><span><bdi>${fmt(v.i,0)} ₪</bdi> · <bdi>${fmt(v.u,0)} $</bdi></span></div>`:'';
+      return`<details class="wdet"><summary>كيف انحسب الرصيد؟</summary>${row('الرصيد الافتتاحي',r.open)}${row('الدخل',r.inc)}${row('المصاريف',r.exp)}${row('التصريف',r.fx)}${row('حركات ديون سجّلتها (بتأثر عالكاش)',r.debt)}${row('مطابقة الرصيد',r.adj)}</details>`})()}
     ${isCur?'<button id="recon">⚖️ طابق الرصيد</button>':''}</div>
   <div class="card">
     <div class="two"><div><small>المصروف بالشيكل</small><b>${fmt(totI,0)} ₪</b></div><div><small>المصروف بالدولار</small><b>${fmt(totU,0)} $</b></div></div>
