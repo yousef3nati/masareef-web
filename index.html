@@ -184,6 +184,53 @@
   .orow{display:flex;gap:6px;margin-top:4px}
   .orow button{border:none;background:none;color:var(--muted);font-size:.8rem;cursor:pointer;padding:2px 4px}
   .ofrm{margin-top:12px}
+  .alert.lunch{background:var(--card);border-color:var(--line)}
+  .lov{position:fixed;inset:0;background:rgba(28,36,32,.55);display:flex;align-items:flex-end;justify-content:center;z-index:11}
+  .lov.hide{display:none}
+  .lbox{background:var(--paper);width:100%;max-width:520px;max-height:88vh;overflow:auto;border-radius:18px 18px 0 0;padding:18px 16px 26px}
+  .lbox h2{font-size:1.05rem;margin-bottom:4px}.lbox .hp{margin-bottom:10px}
+  .l-cl{width:100%;margin-top:8px}
+  .l-in{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--card);margin-bottom:10px;outline:none;color:var(--ink)}
+  .l-lbl{font-size:.8rem;color:var(--muted);margin:8px 0 6px}
+  .l-emo{display:flex;flex-wrap:wrap;gap:6px}
+  .l-emo button{width:40px;height:40px;border-radius:10px;border:1px solid var(--line);background:var(--card);font-size:1.3rem;cursor:pointer}
+  .l-emo button.on{box-shadow:0 0 0 2px var(--olive-2)}
+  .l-ing{display:flex;flex-wrap:wrap;gap:6px}
+  .l-ing span{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:5px 10px;font-size:.82rem}
+  .l-ing span button{border:none;background:none;color:var(--muted);margin-right:4px;cursor:pointer}
+  .l-del{width:100%;padding:10px;border:none;background:none;color:var(--red);cursor:pointer;margin-top:6px}
+  .l-seg2{display:flex;gap:6px;margin-bottom:12px}
+  .l-seg2 button{flex:1;border:1px solid var(--line);background:var(--card);border-radius:20px;padding:7px;font-size:.85rem;cursor:pointer;color:var(--ink)}
+  .l-seg2 button.on{background:var(--olive);color:#fff;border-color:var(--olive)}
+  .l-today{display:flex;align-items:center;gap:12px;background:var(--olive);color:#fff;border-color:var(--olive);margin-bottom:10px}
+  .l-today .e{font-size:2.1rem}.l-today small{opacity:.75;font-size:.8rem}.l-today b{display:block;font-size:1.1rem}
+  .l-wnav{display:flex;align-items:center;justify-content:space-between;margin:4px 0 10px;text-align:center}
+  .l-wnav small{display:block;color:var(--muted);font-size:.78rem}
+  .l-nb{width:40px;height:40px;border-radius:10px;border:1px solid var(--line);background:var(--card);cursor:pointer;font-size:1.1rem;color:var(--ink)}
+  .l-acts{display:flex;gap:8px;margin-bottom:12px}
+  .l-acts button{flex:1;padding:12px 6px;border-radius:12px;border:1px solid var(--olive-2);background:var(--card);color:var(--olive-2);cursor:pointer;font-size:.88rem;font-weight:600}
+  .l-acts button.pri{background:var(--olive);color:#fff;border-color:var(--olive)}
+  .l-day{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px;margin-bottom:8px}
+  .l-day.is-today{box-shadow:0 0 0 2px var(--olive-2)}
+  .l-day .dn{width:54px;flex:none;text-align:center}.l-day .dn b{display:block;font-size:.88rem}.l-day .dn small{color:var(--muted);font-size:.72rem}
+  .l-day .dish{flex:1;min-width:0;cursor:pointer}
+  .l-day .dish .t{font-weight:600;display:flex;align-items:center;gap:6px}.l-day .dish .t span{font-size:1.35rem}
+  .l-day .dish small{display:block;color:var(--muted);font-size:.74rem;margin-top:2px}
+  .l-day .empty{flex:1;border:1px dashed var(--line);border-radius:10px;padding:10px;text-align:center;color:var(--muted);cursor:pointer;background:none;font-size:.88rem}
+  .l-day .ib{flex:none;width:34px;height:34px;border-radius:9px;border:1px solid var(--line);background:var(--paper);cursor:pointer;font-size:.9rem;padding:0}
+  .l-day .pend{display:inline-block;margin-top:4px;font-size:.72rem;background:#FBF0DB;color:#7a5410;border-radius:6px;padding:2px 6px}
+  .l-day .ok{display:inline-block;margin-top:4px;font-size:.72rem;color:var(--olive-2)}
+  .l-day .appr{margin-top:6px;display:flex;gap:6px}
+  .l-day .appr button{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:4px 10px;font-size:.8rem;cursor:pointer;color:var(--ink)}
+  .l-dl{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:8px;cursor:pointer}
+  .l-dl .e{font-size:1.7rem;width:38px;text-align:center}.l-dl .t{flex:1;min-width:0}.l-dl .t b{display:block}
+  .l-dl small{color:var(--muted);font-size:.76rem;display:block;margin-top:2px}
+  .l-tag{font-size:.72rem;border-radius:6px;padding:2px 7px;background:var(--paper);color:var(--muted);white-space:nowrap}
+  .l-tag.new{color:var(--olive-2)}.l-tag.rec{color:var(--red)}
+  .l-ck{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:6px;cursor:pointer}
+  .l-ck .bx{width:24px;height:24px;border-radius:7px;border:2px solid var(--olive-2);flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:.8rem}
+  .l-ck.on .bx{background:var(--olive-2)}.l-ck.off{opacity:.55}.l-ck.off .t b{text-decoration:line-through}
+  .l-ck .t{flex:1}.l-ck small{color:var(--muted);font-size:.75rem;display:block}
   .ofrm .skip{border:1px solid var(--line);border-radius:12px;padding:13px;background:var(--paper);color:var(--ink);font-size:1rem;margin-top:10px}
   .item.obl .bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden;width:100%}
   .item.obl .bar i{display:block;height:100%;background:var(--olive-2);border-radius:3px}
@@ -292,6 +339,7 @@
   <button class="save" id="rec-save">احفظ</button>
   <button class="skip" id="rec-cancel">إلغاء</button>
 </div></div>
+<div class="lov hide" id="lov"><div class="lbox" id="lsheet"></div></div>
 <div class="ov hide" id="pay"><div class="box">
   <h2 id="pay-t"></h2>
   <p id="pay-p"></p>
@@ -802,7 +850,7 @@ const PLACES=[{id:'super',n:'سوبرماركت',i:'🛒'},{id:'veg',n:'خضرة
 const REP={once:'مرة وحدة',monthly:'شهري',yearly:'سنوي'};
 let sh,syncing=false,syncAgain=false,syncErr='',hview='shop',shopPlace='super',oform=null,payCur='ILS',payCb=null;
 
-function sblank(){return{code:'',name:'',joined:'',shop:{},obl:{},people:{},pays:{},dpeople:{},dmv:{},queue:[],last:0}}
+function sblank(){return{code:'',name:'',joined:'',shop:{},obl:{},people:{},pays:{},dpeople:{},dmv:{},dishes:{},plan:{},queue:[],last:0}}
 function sload(){try{sh={...sblank(),...(JSON.parse(localStorage.getItem(SKEY))||{})}}catch(e){sh=sblank()}}
 function ssave(){try{localStorage.setItem(SKEY,JSON.stringify(sh))}catch(e){}}
 function hhFromSettings(){const s=data.settings;if(!sh.code&&s.hh){sh.code=s.hh;sh.name=sh.name||s.hhName||'';sh.joined='';ssave()}}
@@ -871,13 +919,14 @@ async function sync(){
       if(q.del)await api('DELETE',p);else await api('PATCH',p,{fields:ff(q.v)});
       sh.queue=sh.queue.filter(x=>x!==q);ssave();
     }
-    for(const col of ['shop','obl','people','pays','dpeople','dmv']){
+    for(const col of ['shop','obl','people','pays','dpeople','dmv','dishes','plan']){
       const j=await api('GET',`/households/${sh.code}/${col}?pageSize=300`),m={};
       (j.documents||[]).forEach(d=>{const id=d.name.split('/').pop();m[id]={...pf(d.fields||{}),id}});
       sh[col]=m;
     }
     sh.queue.forEach(q=>{if(q.del)delete sh[q.col][q.id];else sh[q.col][q.id]=q.v});
     sh.last=Date.now();syncErr='';ssave();
+    setTimeout(lPrune,0);
   }catch(e){
     if(e.status===401||e.status===403){sh.joined='';ssave()}
     syncErr=e.status?'err':'off';
@@ -932,7 +981,9 @@ function renderBadge(){const n=sh.code?shopOpen().length:0;$('hbadge').textConte
 function renderAlerts(){
   const l=sh.code?oblList().filter(o=>oshare(o)>0&&remOf(o)>0&&daysTo(o.due)<=7).slice(0,3):[];
   $('alerts').innerHTML=l.map(o=>{const n=daysTo(o.due);return`<button class="alert${n<0?' late':''}">${n<0?'⛔':'⚠️'} <b>${esc(o.n)}</b> · ${dueLbl(n)}<br><small>${paidOf(o)>0?`ضايل ${fmt(remOf(o))} من ${fmt(o.amt)}`:fmt(o.amt)} ${SYM[o.cur]}${o.own==='all'?' · مشترك':''}</small></button>`}).join('');
-  $('alerts').querySelectorAll('.alert').forEach(b=>b.onclick=()=>{hview='obl';tab('house')});
+  const lp=sh.code&&(sh.plan||{})[localISO(new Date())],ld=lp&&(sh.dishes||{})[lp.did];
+  if(ld)$('alerts').insertAdjacentHTML('afterbegin',`<button class="alert lunch" data-l="1">${ld.e} غدا اليوم: <b>${esc(ld.n)}</b></button>`);
+  $('alerts').querySelectorAll('.alert').forEach(b=>b.onclick=()=>{hview=b.dataset.l?'lunch':'obl';lLib=false;tab('house')});
 }
 function hstatTxt(){
   if(syncing)return'⏳ عم بزامن…';
@@ -950,14 +1001,163 @@ function renderHstat(){const el=$('hstat-t');if(el)el.textContent=hstatTxt()}
 
 function renderHouse(){
   if(!sh.code)return renderConnect();
-  let h=`<div class="seg"><button data-v="shop" class="${hview==='shop'?'on':''}">🛒 طلبات البيت</button><button data-v="obl" class="${hview==='obl'?'on':''}">📅 التزامات</button></div>
+  let h=`<div class="seg"><button data-v="shop" class="${hview==='shop'?'on':''}">🛒 الطلبات</button><button data-v="obl" class="${hview==='obl'?'on':''}">📅 التزامات</button><button data-v="lunch" class="${hview==='lunch'?'on':''}">🍲 الغدا</button></div>
     <div class="hstat"><span id="hstat-t">${hstatTxt()}</span><button id="hsync">🔄</button></div>`;
-  h+=hview==='shop'?shopHTML():oblHTML();
+  h+=hview==='shop'?shopHTML():hview==='obl'?oblHTML():(lLib&&lDishes().length?lunchLibHTML():lunchHTML());
   $('hbody').innerHTML=h;
   $('hbody').querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{hview=b.dataset.v;oform=null;renderHouse()});
   $('hsync').onclick=()=>sync();
-  hview==='shop'?bindShop():bindObl();
+  hview==='shop'?bindShop():hview==='obl'?bindObl():bindLunch();
 }
+// ---- lunch planner (shared) ----
+const LDAYS=['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+const LCATS={cook:'🍳 طبيخ',quick:'⚡ سريع',out:'🛵 من برا'};
+const LEMO=['🍲','🍗','🥘','🍛','🍝','🥣','🍃','🐑','🥬','🫛','🌯','🍕','🧆','🍔','🐟','🥗','🍳','🫓'];
+const LSEED=[['مقلوبة','🍲','cook','دجاج،رز،باذنجان،قرنبيط،بصل'],['ملوخية','🥬','cook','ملوخية،دجاج،ثوم،رز،ليمون'],['مسخن','🍗','cook','دجاج،خبز طابون،بصل،سماق،زيت زيتون'],
+ ['منسف','🐑','cook','لحمة،جميد،رز،شراك،صنوبر'],['مجدرة','🍛','quick','عدس،رز،بصل'],['كفتة بالطحينة','🥘','cook','لحمة مفرومة،طحينة،بطاطا،بندورة'],
+ ['معكرونة بالبشاميل','🍝','cook','معكرونة،لحمة مفرومة،حليب،طحين،جبنة'],['شوربة عدس','🥣','quick','عدس،بصل،جزر،ليمون'],['ورق دوالي','🍃','cook','ورق عنب،رز،لحمة مفرومة،ليمون'],
+ ['فاصوليا خضرا','🫛','cook','فاصوليا خضرا،لحمة،بندورة،رز'],['شاورما','🌯','out',''],['بيتزا','🍕','out',''],['فلافل وحمص','🧆','quick','حمص،فلافل جاهز،خبز،بندورة']];
+const LVEG=['بصل','بندورة','باذنجان','قرنبيط','ملوخية','ليمون','ثوم','جزر','بطاطا','فاصوليا خضرا','ورق عنب','خيار','كوسا','فلفل','بقدونس','نعنع'];
+let lwOff=0;
+const ltoday=()=>localISO(new Date());
+const lAddD=(s,n)=>{const[y,m,d]=s.split('-').map(Number);return localISO(new Date(y,m-1,d+n))};
+const lDow=s=>{const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d).getDay()};
+const lWeek=off=>{const t=ltoday(),back=(lDow(t)+1)%7,s=lAddD(t,-back+off*7);return[...Array(7)].map((_,i)=>lAddD(s,i))};
+const lDish=id=>(sh.dishes||{})[id];
+const lDishes=()=>Object.values(sh.dishes||{});
+const lPlan=()=>sh.plan||{};
+const lAgo=s=>s?-daysTo(s):null;
+function lLast(d){let b=d.last||'';const t=ltoday();for(const k in lPlan()){const p=lPlan()[k];if(p.did===d.id&&k<=t&&k>b)b=k}return b||null}
+const lMain=d=>['دجاج','لحمة','لحمة مفرومة','عدس'].find(x=>(d.ing||[]).includes(x))||d.c;
+const lOthers=()=>[...new Set(Object.values(sh.people).map(p=>p.n).filter(n=>n&&n!==sh.name))].join(' و')||'أهل البيت';
+const lMine=p=>p.u===myUid()||(!p.u&&p.by===sh.name);
+function lPlace(n){if(/دجاج|لحم/.test(n))return'meat';if(LVEG.includes(n))return'veg';return'super'}
+function lAgoTxt(a){if(a===null)return'جديدة';if(a===0)return'اليوم';if(a<0)return'جاية';return a<14?`قبل ${a} يوم`:`صرلها ${a} يوم`}
+
+function lunchHTML(){
+  const ds=lWeek(lwOff),t=ltoday(),tp=lPlan()[t],td=tp&&lDish(tp.did);
+  if(!lDishes().length)return`<div class="card"><h2 class="ht">🍲 غدا الأسبوع</h2><p class="hp">ضيفوا الأكلات اللي بتحبوها، وبعدين خططوا الأسبوع وطلّعوا المكونات للطلبات بكبسة.</p>
+    <button class="save" id="l-seed">ضيف 13 أكلة جاهزة (مقلوبة، ملوخية، مسخن…)</button><button class="skip" id="l-new0" style="width:100%;margin-top:8px">أو ضيف أكلاتكم من الصفر</button></div>`;
+  let h=`<div class="l-seg2"><button class="on" data-lv="week">📅 الأسبوع</button><button data-lv="lib">🍲 أكلاتنا (${lDishes().length})</button></div>`;
+  if(lwOff===0)h+=`<div class="card l-today"><span class="e">${td?td.e:'🤔'}</span><div><small>غدا اليوم · ${LDAYS[lDow(t)]}</small><b>${td?esc(td.n):'لسا ما قررتوا'}</b></div></div>`;
+  h+=`<div class="l-wnav"><button class="l-nb" id="l-prev">›</button><div><b>${lwOff===0?'هالأسبوع':lwOff===1?'الأسبوع الجاي':lwOff===-1?'الأسبوع الماضي':''}</b><small>${dm(ds[0])} ← ${dm(ds[6])}</small></div><button class="l-nb" id="l-next">‹</button></div>
+    <div class="l-acts"><button class="pri" id="l-fill">🎲 عبّيلي الفاضي</button><button id="l-ings">🛒 المكونات للطلبات</button></div>`;
+  ds.forEach(k=>{
+    const p=lPlan()[k],x=p&&lDish(p.did),isT=k===t,past=k<t;
+    h+=`<div class="l-day${isT?' is-today':''}"${past?' style="opacity:.6"':''}><div class="dn"><b>${LDAYS[lDow(k)]}</b><small>${dm(k)}</small></div>`;
+    if(x){
+      h+=`<div class="dish" data-k="${k}"><div class="t"><span>${x.e}</span>${esc(x.n)}</div><small>${LCATS[x.c]||''} · ${esc(p.by||'')}</small>
+        ${p.ok?'<span class="ok">✓ موافقين</span>':lMine(p)?`<span class="pend">⏳ بستنى رأي ${esc(lOthers())}</span>`:`<div class="appr"><button data-ok="${k}">👍 ماشي</button><button data-alt="${k}">🔄 بدّل</button></div>`}</div>
+        <button class="ib" data-r="${k}" aria-label="اقترح غيرها">🎲</button><button class="ib" data-x="${k}" aria-label="شيل">✕</button>`;
+    }else h+=`<button class="empty" data-pick="${k}">+ اختار أكلة</button><button class="ib" data-r="${k}" aria-label="اقترحلي">🎲</button>`;
+    h+=`</div>`;
+  });
+  h+=`<p class="hp" style="text-align:center;margin-top:12px">🎲 بيختار من اللي ما أكلتوها آخر أسبوعين، وما بيكرر دجاج أو لحمة يومين ورا بعض، وأكلة "من برا" وحدة بالأسبوع بالكتير.</p>`;
+  return h;
+}
+function lunchLibHTML(){
+  const l=lDishes().sort((a,b)=>a.n.localeCompare(b.n,'ar'));
+  return`<div class="l-seg2"><button data-lv="week">📅 الأسبوع</button><button class="on" data-lv="lib">🍲 أكلاتنا (${l.length})</button></div>
+    <button class="newo" id="l-new" style="margin-top:0;margin-bottom:10px">+ أكلة جديدة</button>`+
+    l.map(d=>`<div class="l-dl" data-id="${esc(d.id)}"><span class="e">${d.e}</span><div class="t"><b>${esc(d.n)}</b><small>${(d.ing||[]).length?esc(d.ing.join('، ')):'ما بدها مكونات'}</small></div><span class="l-tag">${lAgoTxt(lAgo(lLast(d)))}</span></div>`).join('');
+}
+let lLib=false;
+function bindLunch(){
+  const b=$('hbody');
+  b.querySelectorAll('[data-lv]').forEach(x=>x.onclick=()=>{lLib=x.dataset.lv==='lib';renderHouse()});
+  if($('l-seed'))$('l-seed').onclick=()=>{LSEED.forEach(([n,e,c,i])=>sput('dishes',{id:'f'+uid(),n,e,c,ing:i?i.split('،'):[],last:''}));toast('انضافوا ✓')};
+  if($('l-new0'))$('l-new0').onclick=()=>lOpenDish(null);
+  if($('l-new'))$('l-new').onclick=()=>lOpenDish(null);
+  b.querySelectorAll('.l-dl').forEach(x=>x.onclick=()=>lOpenDish(x.dataset.id));
+  if(!$('l-prev'))return;
+  $('l-prev').onclick=()=>{lwOff--;renderHouse()};$('l-next').onclick=()=>{lwOff++;renderHouse()};
+  $('l-fill').onclick=lFill;$('l-ings').onclick=lOpenIngs;
+  b.querySelectorAll('[data-pick]').forEach(x=>x.onclick=()=>lOpenPicker(x.dataset.pick));
+  b.querySelectorAll('.l-day .dish').forEach(x=>x.onclick=e=>{if(e.target.closest('button'))return;lOpenPicker(x.dataset.k)});
+  b.querySelectorAll('[data-r]').forEach(x=>x.onclick=()=>{const d=lSuggest(x.dataset.r);if(!d){toast('ضيفوا أكلات أكتر');return}lSet(x.dataset.r,d.id);toast(`${d.e} ${d.n}`)});
+  b.querySelectorAll('[data-x]').forEach(x=>x.onclick=()=>{sdel('plan',x.dataset.x);renderShared();sync()});
+  b.querySelectorAll('[data-ok]').forEach(x=>x.onclick=()=>{const p=lPlan()[x.dataset.ok];if(p){sput('plan',{...p,ok:true});toast('👍 تمام')}});
+  b.querySelectorAll('[data-alt]').forEach(x=>x.onclick=()=>lOpenPicker(x.dataset.alt));
+}
+const lSet=(k,did)=>sput('plan',{id:k,did,by:sh.name,u:myUid(),ok:false});
+function lSuggest(k){
+  const ds=lWeek(lwOff),used=new Set(ds.map(x=>lPlan()[x]&&x!==k&&lPlan()[x].did).filter(Boolean)),i=ds.indexOf(k);
+  const nb=[ds[i-1],ds[i+1]].map(x=>x&&lPlan()[x]&&lDish(lPlan()[x].did)).filter(Boolean).map(lMain);
+  const outN=ds.filter(x=>x!==k&&lPlan()[x]&&lDish(lPlan()[x].did)&&lDish(lPlan()[x].did).c==='out').length;
+  const cur=lPlan()[k]&&lPlan()[k].did;
+  let c=lDishes().filter(d=>d.id!==cur&&!used.has(d.id)&&(lAgo(lLast(d))??99)>=14&&!nb.includes(lMain(d))&&!(d.c==='out'&&outN>=1));
+  if(!c.length)c=lDishes().filter(d=>d.id!==cur&&!used.has(d.id));
+  if(!c.length)return null;
+  const w=c.map(d=>Math.min(60,Math.max(0,lAgo(lLast(d))??60))+5);let r=Math.random()*w.reduce((a,b)=>a+b,0);
+  for(let j=0;j<c.length;j++){r-=w[j];if(r<=0)return c[j]}return c[0];
+}
+function lFill(){
+  const t=ltoday();let n=0;
+  lWeek(lwOff).filter(k=>k>=t).forEach(k=>{if(!lPlan()[k]){const d=lSuggest(k);if(d){sh.plan[k]={id:k,did:d.id};lSet(k,d.id);n++}}});
+  toast(n?`🎲 تعبّى ${n} يوم`:'الأسبوع معبّى');
+}
+function lSheet(html){$('lsheet').innerHTML=html;$('lov').classList.remove('hide')}
+function lClose(){$('lov').classList.add('hide')}
+function lOpenPicker(k){
+  let q='';
+  lSheet(`<h2>غدا ${LDAYS[lDow(k)]} ${dm(k)}</h2><p class="hp">مرتبة من الأقدم: اللي صرلكم أكتر ما أكلتوها فوق.</p>
+    <input class="l-in" id="l-q" placeholder="🔍 دوّر..."><div id="l-pl"></div><button class="skip l-cl" id="l-pc">إلغاء</button>`);
+  const draw=()=>{
+    const l=lDishes().filter(x=>!q||x.n.includes(q)).sort((a,b)=>(lAgo(lLast(b))??999)-(lAgo(lLast(a))??999));
+    $('l-pl').innerHTML=l.map(x=>{const a=lAgo(lLast(x));return`<div class="l-dl" data-id="${esc(x.id)}"><span class="e">${x.e}</span><div class="t"><b>${esc(x.n)}</b><small>${LCATS[x.c]||''}</small></div><span class="l-tag ${a===null||a>=14?'new':a<7?'rec':''}">${lAgoTxt(a)}</span></div>`}).join('')||'<p class="hp">ما في نتايج</p>';
+    $('l-pl').querySelectorAll('.l-dl').forEach(x=>x.onclick=()=>{lSet(k,x.dataset.id);lClose();toast('✓ انحطت')});
+  };
+  draw();$('l-q').oninput=e=>{q=e.target.value.trim();draw()};$('l-pc').onclick=lClose;
+}
+function lOpenDish(id){
+  const s=id&&lDish(id),o=s?{...s,ing:[...(s.ing||[])]}:{id:'f'+uid(),n:'',e:'🍲',c:'cook',ing:[],last:''};
+  const draw=()=>{
+    lSheet(`<h2>${s?'عدّل الأكلة':'أكلة جديدة'}</h2><p class="hp">بتنحفظ عندكم الاثنين.</p>
+      <input class="l-in" id="l-dn" placeholder="اسم الأكلة، مثلاً: مقلوبة" value="${esc(o.n)}">
+      <div class="l-lbl">الشكل</div><div class="l-emo">${LEMO.map(e=>`<button class="${o.e===e?'on':''}" data-e="${e}">${e}</button>`).join('')}</div>
+      <div class="l-lbl">النوع</div><div class="subs" style="margin-top:0">${Object.entries(LCATS).map(([k,v])=>`<button class="sub${o.c===k?' sel':''}" data-c="${k}">${v}</button>`).join('')}</div>
+      ${o.c==='out'?'<p class="hp" style="margin-top:8px">أكل من برا ما إله مكونات.</p>':`<div class="l-lbl">المكونات (عشان تنضاف للطلبات)</div>
+      <div class="l-ing">${o.ing.map((x,i)=>`<span>${esc(x)}<button data-i="${i}">✕</button></span>`).join('')||'<span style="border-style:dashed;color:var(--muted)">لسا ما في</span>'}</div>
+      <div class="addp" style="margin-top:6px"><input id="l-ni" placeholder="مثلاً: دجاج (أو كذا وحدة بفاصلة)"><button id="l-ai">+</button></div>`}
+      <button class="save" id="l-ds">احفظ</button><button class="skip l-cl" id="l-dc">إلغاء</button>${s?'<button class="l-del" id="l-dd">🗑 احذف الأكلة</button>':''}`);
+    const keep=()=>{o.n=$('l-dn').value};
+    $('lsheet').querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>{keep();o.e=b.dataset.e;draw()});
+    $('lsheet').querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{keep();o.c=b.dataset.c;draw()});
+    $('lsheet').querySelectorAll('[data-i]').forEach(b=>b.onclick=()=>{keep();o.ing.splice(+b.dataset.i,1);draw()});
+    const addI=()=>{keep();$('l-ni').value.split(/[،,]/).map(x=>x.trim()).filter(Boolean).forEach(x=>{if(!o.ing.includes(x))o.ing.push(x)});draw();$('l-ni')&&$('l-ni').focus()};
+    if($('l-ai')){$('l-ai').onclick=addI;$('l-ni').onkeydown=e=>{if(e.key==='Enter')addI()}}
+    $('l-ds').onclick=()=>{keep();o.n=o.n.trim();if(!o.n){toast('اكتب اسم الأكلة');return}
+      if($('l-ni')&&$('l-ni').value.trim())$('l-ni').value.split(/[،,]/).map(x=>x.trim()).filter(Boolean).forEach(x=>{if(!o.ing.includes(x))o.ing.push(x)});
+      if(o.c==='out')o.ing=[];lClose();sput('dishes',o);toast('انحفظت ✓')};
+    $('l-dc').onclick=lClose;
+    if($('l-dd'))$('l-dd').onclick=()=>{if(!confirm(`تحذف "${o.n}"؟ رح تنحذف عند الكل.`))return;
+      Object.values(lPlan()).filter(p=>p.did===o.id&&p.id>=ltoday()).forEach(p=>sdel('plan',p.id));sdel('dishes',o.id);lClose();renderShared();sync()};
+  };
+  draw();
+}
+function lOpenIngs(){
+  const t=ltoday(),ds=lWeek(lwOff).filter(k=>k>=t&&lPlan()[k]&&lDish(lPlan()[k].did)),m={};
+  ds.forEach(k=>{const d=lDish(lPlan()[k].did);(d.ing||[]).forEach(x=>{(m[x]=m[x]||[]).push(d.n)})});
+  const open=shopOpen().map(x=>x.n);
+  const items=Object.entries(m).map(([n,f])=>({n,f:[...new Set(f)],dup:open.includes(n),on:!open.includes(n)}));
+  if(!items.length){toast(ds.length?'الأكلات المختارة ما إلها مكونات':'اختاروا أكلات للأيام الجاية أول');return}
+  const draw=()=>{
+    const n=items.filter(x=>x.on).length;
+    lSheet(`<h2>🛒 مكونات الأسبوع</h2><p class="hp">شيلوا الإشارة عن اللي عندكم بالبيت، والباقي بينضاف لطلبات البيت.</p>
+      ${items.map((x,i)=>`<div class="l-ck${x.on?' on':' off'}" data-i="${i}"><span class="bx">${x.on?'✓':''}</span><div class="t"><b>${esc(x.n)}</b><small>لـ ${esc(x.f.join('، '))}${x.dup?' · موجود بالطلبات':''}</small></div></div>`).join('')}
+      <button class="save" id="l-is"${n?'':' disabled style="opacity:.5"'}>ضيف ${n} غرض للطلبات</button><button class="skip l-cl" id="l-ic">إلغاء</button>`);
+    $('lsheet').querySelectorAll('.l-ck').forEach(b=>b.onclick=()=>{const x=items[+b.dataset.i];x.on=!x.on;draw()});
+    $('l-is').onclick=()=>{items.filter(x=>x.on).forEach((x,i)=>sput('shop',{id:'i'+uid()+i,n:x.n,q:'',pl:lPlace(x.n),by:sh.name,done:false,c:Date.now()+i,from:x.f.join('، ')}));
+      lClose();toast(`انضاف ${n} غرض ✓`);hview='shop';renderHouse()};
+    $('l-ic').onclick=lClose;
+  };
+  draw();
+}
+function lPrune(){ // keep plan small: fold days older than 60 into dish.last
+  const cut=lAddD(ltoday(),-60);
+  Object.values(lPlan()).filter(p=>p.id<cut).forEach(p=>{const d=lDish(p.did);if(d&&(!d.last||p.id>d.last))sput('dishes',{...d,last:p.id});sdel('plan',p.id)});
+}
+
 function renderConnect(){
   $('hbody').innerHTML=`<div class="card"><h2 class="ht">🏠 البيت المشترك</h2>
     <p class="hp">طلبات البيت والالتزامات (تأمين، ترخيص، أقساط…) بتطلع عندك وعند أهل بيتك. مصاريفك ورصيدك بيضلوا إلك لحالك.</p>
@@ -1000,7 +1200,7 @@ function shopHTML(){
     const l=open.filter(x=>(PLACES.find(q=>q.id===x.pl)?x.pl:'other')===p.id).sort((a,b)=>a.c-b.c);
     if(!l.length)return;
     h+=`<div class="gtitle">${p.i} ${p.n} (${l.length})</div>`+l.map(x=>`<div class="item"><button class="tick" data-id="${esc(x.id)}" aria-label="جبته"></button>
-      <div class="t"><div>${esc(x.n)}</div><small>${x.q?esc(x.q)+' · ':''}${esc(x.by||'')}</small></div><button class="del sdl" data-id="${esc(x.id)}" aria-label="احذف">✕</button></div>`).join('');
+      <div class="t"><div>${esc(x.n)}</div><small>${x.q?esc(x.q)+' · ':''}${x.from?'🍲 '+esc(x.from)+' · ':''}${esc(x.by||'')}</small></div><button class="del sdl" data-id="${esc(x.id)}" aria-label="احذف">✕</button></div>`).join('');
   });
   if(done.length){
     h+=`<div class="gtitle">✔️ انجابوا (${done.length})</div>`+done.sort((a,b)=>(b.dt||0)-(a.dt||0)).map(x=>`<div class="item done"><button class="tick on" data-id="${esc(x.id)}" aria-label="رجّعه">✓</button>
