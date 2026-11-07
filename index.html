@@ -228,6 +228,9 @@
   .l-dl{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:8px;cursor:pointer}
   .l-dl .e{font-size:1.7rem;width:38px;text-align:center}.l-dl .t{flex:1;min-width:0}.l-dl .t b{display:block}
   .l-dl small{color:var(--muted);font-size:.76rem;display:block;margin-top:2px}
+  .l-sides{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px;align-items:center}
+  .l-sides span{font-size:.74rem;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:2px 8px}
+  .l-addside{font-size:.74rem;border:1px dashed var(--olive-2);color:var(--olive-2);background:none;border-radius:12px;padding:2px 8px;cursor:pointer}
   .l-tag{font-size:.72rem;border-radius:6px;padding:2px 7px;background:var(--paper);color:var(--muted);white-space:nowrap}
   .l-tag.new{color:var(--olive-2)}.l-tag.rec{color:var(--red)}
   .l-ck{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:6px;cursor:pointer}
@@ -986,7 +989,8 @@ function renderAlerts(){
   const l=sh.code?oblList().filter(o=>oshare(o)>0&&remOf(o)>0&&daysTo(o.due)<=7).slice(0,3):[];
   $('alerts').innerHTML=l.map(o=>{const n=daysTo(o.due);return`<button class="alert${n<0?' late':''}">${n<0?'⛔':'⚠️'} <b>${esc(o.n)}</b> · ${dueLbl(n)}<br><small>${paidOf(o)>0?`ضايل ${fmt(remOf(o))} من ${fmt(o.amt)}`:fmt(o.amt)} ${SYM[o.cur]}${o.own==='all'?' · مشترك':''}</small></button>`}).join('');
   const lp=sh.code&&(sh.plan||{})[localISO(new Date())],ld=lp&&(sh.dishes||{})[lp.did];
-  if(ld)$('alerts').insertAdjacentHTML('afterbegin',`<button class="alert lunch" data-l="1">${ld.e} غدا اليوم: <b>${esc(ld.n)}</b></button>`);
+  const lsd=lp&&Array.isArray(lp.sides)?lp.sides.map(id=>(sh.dishes||{})[id]).filter(Boolean):[];
+  if(ld)$('alerts').insertAdjacentHTML('afterbegin',`<button class="alert lunch" data-l="1">${ld.e} غدا اليوم: <b>${esc(ld.n)}</b>${lsd.length?' + '+lsd.map(x=>esc(x.n)).join('، '):''}</button>`);
   $('alerts').querySelectorAll('.alert').forEach(b=>b.onclick=()=>{hview=b.dataset.l?'lunch':'obl';lLib=false;tab('house')});
 }
 function hstatTxt(){
@@ -1007,7 +1011,7 @@ function renderHouse(){
   if(!sh.code)return renderConnect();
   let h=`<div class="seg"><button data-v="shop" class="${hview==='shop'?'on':''}">🛒 الطلبات</button><button data-v="obl" class="${hview==='obl'?'on':''}">📅 التزامات</button><button data-v="lunch" class="${hview==='lunch'?'on':''}">🍲 الغدا</button></div>
     <div class="hstat"><span id="hstat-t">${hstatTxt()}</span><button id="hsync">🔄</button></div>`;
-  h+=hview==='shop'?shopHTML():hview==='obl'?oblHTML():(lLib&&lDishes().length?lunchLibHTML():lunchHTML());
+  h+=hview==='shop'?shopHTML():hview==='obl'?oblHTML():(lLib&&lAll().length?lunchLibHTML():lunchHTML());
   $('hbody').innerHTML=h;
   $('hbody').querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{hview=b.dataset.v;oform=null;renderHouse()});
   $('hsync').onclick=()=>sync();
@@ -1016,7 +1020,7 @@ function renderHouse(){
 // ---- lunch planner (shared) ----
 const LDAYS=['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
 const LCATS={cook:'🍳 طبيخ',quick:'⚡ سريع',out:'🛵 من برا'};
-const LEMO=['🍲','🍗','🥘','🍛','🍝','🥣','🍃','🐑','🥬','🫛','🌯','🍕','🧆','🍔','🐟','🥗','🍳','🫓'];
+const LEMO=['🍲','🍗','🥘','🍛','🍝','🥣','🍃','🐑','🥬','🫛','🌯','🍕','🧆','🍔','🐟','🥗','🍳','🫓','🫘','🍆','🌿','🥛','🥒','🍅'];
 const LSEED=[['مقلوبة','🍲','cook','دجاج،رز،باذنجان،قرنبيط،بصل'],['ملوخية','🥬','cook','ملوخية،دجاج،ثوم،رز،ليمون'],['مسخن','🍗','cook','دجاج،خبز طابون،بصل،سماق،زيت زيتون'],
  ['منسف','🐑','cook','لحمة،جميد،رز،شراك،صنوبر'],['مجدرة','🍛','quick','عدس،رز،بصل'],['كفتة بالطحينة','🥘','cook','لحمة مفرومة،طحينة،بطاطا،بندورة'],
  ['معكرونة بالبشاميل','🍝','cook','معكرونة،لحمة مفرومة،حليب،طحين،جبنة'],['شوربة عدس','🥣','quick','عدس،بصل،جزر،ليمون'],['ورق دوالي','🍃','cook','ورق عنب،رز،لحمة مفرومة،ليمون'],
@@ -1028,7 +1032,13 @@ const lAddD=(s,n)=>{const[y,m,d]=s.split('-').map(Number);return localISO(new Da
 const lDow=s=>{const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d).getDay()};
 const lWeek=off=>{const t=ltoday(),back=(lDow(t)+1)%7,s=lAddD(t,-back+off*7);return[...Array(7)].map((_,i)=>lAddD(s,i))};
 const lDish=id=>(sh.dishes||{})[id];
-const lDishes=()=>Object.values(sh.dishes||{});
+const lAll=()=>Object.values(sh.dishes||{});
+const lIsSide=d=>d.k==='side';
+const lDishes=()=>lAll().filter(d=>!lIsSide(d));
+const lSides=()=>lAll().filter(lIsSide);
+const LSIDE_SEED=[['سلطة عربية','🥗','بندورة،خيار،بصل،ليمون،بقدونس'],['حمص','🫘','حمص حب،طحينة،ليمون،ثوم'],['متبل','🍆','باذنجان،طحينة،ليمون،ثوم'],
+ ['شوربة','🥣','شوربة جاهزة،بصل،جزر'],['فتوش','🥗','خس،بندورة،خيار،فجل،خبز،سماق'],['تبولة','🌿','بقدونس،برغل،بندورة،ليمون،نعنع'],['لبن وخيار','🥛','لبن،خيار،نعنع،ثوم']];
+const lSideIds=p=>(p&&Array.isArray(p.sides)?p.sides:[]).filter(id=>lDish(id));
 const lPlan=()=>sh.plan||{};
 const lAgo=s=>s?-daysTo(s):null;
 function lLast(d){let b=d.last||'';const t=ltoday();for(const k in lPlan()){const p=lPlan()[k];if(p.did===d.id&&k<=t&&k>b)b=k}return b||null}
@@ -1040,17 +1050,19 @@ function lAgoTxt(a){if(a===null)return'جديدة';if(a===0)return'اليوم';i
 
 function lunchHTML(){
   const ds=lWeek(lwOff),t=ltoday(),tp=lPlan()[t],td=tp&&lDish(tp.did);
-  if(!lDishes().length)return`<div class="card"><h2 class="ht">🍲 غدا الأسبوع</h2><p class="hp">ضيفوا الأكلات اللي بتحبوها، وبعدين خططوا الأسبوع وطلّعوا المكونات للطلبات بكبسة.</p>
-    <button class="save" id="l-seed">ضيف 13 أكلة جاهزة (مقلوبة، ملوخية، مسخن…)</button><button class="l-cl" id="l-new0">أو ضيف أكلاتكم من الصفر</button></div>`;
-  let h=`<div class="l-seg2"><button class="on" data-lv="week">📅 الأسبوع</button><button data-lv="lib">🍲 أكلاتنا (${lDishes().length})</button></div>`;
-  if(lwOff===0)h+=`<div class="card l-today"><span class="e">${td?td.e:'🤔'}</span><div><small>غدا اليوم · ${LDAYS[lDow(t)]}</small><b>${td?esc(td.n):'لسا ما قررتوا'}</b></div></div>`;
+  if(!lAll().length)return`<div class="card"><h2 class="ht">🍲 غدا الأسبوع</h2><p class="hp">ضيفوا الأكلات اللي بتحبوها، وبعدين خططوا الأسبوع وطلّعوا المكونات للطلبات بكبسة.</p>
+    <button class="save" id="l-seed">ضيف 13 أكلة و7 مقبلات جاهزين</button><button class="l-cl" id="l-new0">أو ضيف أكلاتكم من الصفر</button></div>`;
+  let h=lSeg('week');
+  if(lwOff===0)h+=`<div class="card l-today"><span class="e">${td?td.e:'🤔'}</span><div><small>غدا اليوم · ${LDAYS[lDow(t)]}</small><b>${td?esc(td.n):'لسا ما قررتوا'}</b>${td&&lSideIds(tp).length?`<small style="display:block;opacity:.85">+ ${lSideIds(tp).map(id=>esc(lDish(id).n)).join('، ')}</small>`:''}</div></div>`;
   h+=`<div class="l-wnav"><button class="l-nb" id="l-prev">›</button><div><b>${lwOff===0?'هالأسبوع':lwOff===1?'الأسبوع الجاي':lwOff===-1?'الأسبوع الماضي':''}</b><small>${dm(ds[0])} ← ${dm(ds[6])}</small></div><button class="l-nb" id="l-next">‹</button></div>
     <div class="l-acts"><button class="pri" id="l-fill">🎲 عبّيلي الفاضي</button><button id="l-ings">🛒 المكونات للطلبات</button></div>`;
   ds.forEach(k=>{
     const p=lPlan()[k],x=p&&lDish(p.did),isT=k===t,past=k<t;
     h+=`<div class="l-day${isT?' is-today':''}"${past?' style="opacity:.6"':''}><div class="dn"><b>${LDAYS[lDow(k)]}</b><small>${dm(k)}</small></div>`;
     if(x){
+      const sd=lSideIds(p);
       h+=`<div class="dish" data-k="${k}"><div class="t"><span>${x.e}</span>${esc(x.n)}</div><small>${LCATS[x.c]||''} · ${esc(p.by||'')}</small>
+        <div class="l-sides">${sd.map(id=>`<span>${lDish(id).e} ${esc(lDish(id).n)}</span>`).join('')}<button class="l-addside" data-side="${k}">${sd.length?'✎ مقبلات':'+ مقبلات'}</button></div>
         ${p.ok?'<span class="ok">✓ موافقين</span>':lMine(p)?`<span class="pend">⏳ بستنى رأي ${esc(lOthers())}</span>`:`<div class="appr"><button data-ok="${k}">👍 ماشي</button><button data-alt="${k}">🔄 بدّل</button></div>`}</div>
         <button class="ib" data-r="${k}" aria-label="اقترح غيرها">🎲</button><button class="ib" data-x="${k}" aria-label="شيل">✕</button>`;
     }else h+=`<button class="empty" data-pick="${k}">+ اختار أكلة</button><button class="ib" data-r="${k}" aria-label="اقترحلي">🎲</button>`;
@@ -1060,18 +1072,21 @@ function lunchHTML(){
   return h;
 }
 function lunchLibHTML(){
-  const l=lDishes().sort((a,b)=>a.n.localeCompare(b.n,'ar'));
-  return`<div class="l-seg2"><button data-lv="week">📅 الأسبوع</button><button class="on" data-lv="lib">🍲 أكلاتنا (${l.length})</button></div>
-    <button class="newo" id="l-new" style="margin-top:0;margin-bottom:10px">+ أكلة جديدة</button>`+
+  const side=lLibK==='side',l=(side?lSides():lDishes()).sort((a,b)=>a.n.localeCompare(b.n,'ar'));
+  return lSeg(lLibK)+`<button class="newo" id="l-new" style="margin-top:0;margin-bottom:10px">${side?'+ مقبلات جديدة':'+ أكلة جديدة'}</button>`+
+    (side&&!l.length?'<button class="l-cl" id="l-seedside" style="margin:0 0 10px">ضيف 7 مقبلات جاهزين (سلطة، حمص، متبل…)</button>':'')+
     l.map(d=>`<div class="l-dl" data-id="${esc(d.id)}"><span class="e">${d.e}</span><div class="t"><b>${esc(d.n)}</b><small>${(d.ing||[]).length?esc(d.ing.join('، ')):'ما بدها مكونات'}</small></div><span class="l-tag">${lAgoTxt(lAgo(lLast(d)))}</span></div>`).join('');
 }
-let lLib=false;
+let lLib=false,lLibK='main';
+const lSeg=v=>`<div class="l-seg2"><button class="${v==='week'?'on':''}" data-lv="week">📅 الأسبوع</button><button class="${v==='main'?'on':''}" data-lv="main">🍲 أكلاتنا (${lDishes().length})</button><button class="${v==='side'?'on':''}" data-lv="side">🥗 مقبلات (${lSides().length})</button></div>`;
 function bindLunch(){
   const b=$('hbody');
-  b.querySelectorAll('[data-lv]').forEach(x=>x.onclick=()=>{lLib=x.dataset.lv==='lib';renderHouse()});
-  if($('l-seed'))$('l-seed').onclick=()=>{LSEED.forEach(([n,e,c,i])=>sput('dishes',{id:'f'+uid(),n,e,c,ing:i?i.split('،'):[],last:''}));toast('انضافوا ✓')};
+  b.querySelectorAll('[data-lv]').forEach(x=>x.onclick=()=>{lLib=x.dataset.lv!=='week';if(lLib)lLibK=x.dataset.lv;renderHouse()});
+  b.querySelectorAll('[data-side]').forEach(x=>x.onclick=e=>{e.stopPropagation();lOpenSides(x.dataset.side)});
+  if($('l-seed'))$('l-seed').onclick=()=>{LSEED.forEach(([n,e,c,i])=>sput('dishes',{id:'f'+uid(),n,e,c,ing:i?i.split('،'):[],last:''}));LSIDE_SEED.forEach(([n,e,i])=>sput('dishes',{id:'s'+uid(),n,e,c:'side',k:'side',ing:i.split('،'),last:''}));toast('انضافوا ✓')};
+  if($('l-seedside'))$('l-seedside').onclick=()=>{LSIDE_SEED.forEach(([n,e,i])=>sput('dishes',{id:'s'+uid(),n,e,c:'side',k:'side',ing:i.split('،'),last:''}));toast('انضافوا ✓')};
   if($('l-new0'))$('l-new0').onclick=()=>lOpenDish(null);
-  if($('l-new'))$('l-new').onclick=()=>lOpenDish(null);
+  if($('l-new'))$('l-new').onclick=()=>lOpenDish(null,lLibK==='side');
   b.querySelectorAll('.l-dl').forEach(x=>x.onclick=()=>lOpenDish(x.dataset.id));
   if(!$('l-prev'))return;
   $('l-prev').onclick=()=>{lwOff--;renderHouse()};$('l-next').onclick=()=>{lwOff++;renderHouse()};
@@ -1083,7 +1098,7 @@ function bindLunch(){
   b.querySelectorAll('[data-ok]').forEach(x=>x.onclick=()=>{const p=lPlan()[x.dataset.ok];if(p){sput('plan',{...p,ok:true});toast('👍 تمام')}});
   b.querySelectorAll('[data-alt]').forEach(x=>x.onclick=()=>lOpenPicker(x.dataset.alt));
 }
-const lSet=(k,did)=>sput('plan',{id:k,did,by:sh.name,u:myUid(),ok:false});
+const lSet=(k,did)=>{const p=lPlan()[k];sput('plan',{id:k,did,sides:lSideIds(p),by:sh.name,u:myUid(),ok:false})};
 function lSuggest(k){
   const ds=lWeek(lwOff),used=new Set(ds.map(x=>lPlan()[x]&&x!==k&&lPlan()[x].did).filter(Boolean)),i=ds.indexOf(k);
   const nb=[ds[i-1],ds[i+1]].map(x=>x&&lPlan()[x]&&lDish(lPlan()[x].did)).filter(Boolean).map(lMain);
@@ -1097,7 +1112,7 @@ function lSuggest(k){
 }
 function lFill(){
   const t=ltoday();let n=0;
-  lWeek(lwOff).filter(k=>k>=t).forEach(k=>{if(!lPlan()[k]){const d=lSuggest(k);if(d){sh.plan[k]={id:k,did:d.id};lSet(k,d.id);n++}}});
+  lWeek(lwOff).filter(k=>k>=t).forEach(k=>{if(!lPlan()[k]){const d=lSuggest(k);if(d){lSet(k,d.id);n++}}});
   toast(n?`🎲 تعبّى ${n} يوم`:'الأسبوع معبّى');
 }
 function lSheet(html){const top=$('lov').classList.contains('hide')?0:$('lsheet').scrollTop;$('lsheet').innerHTML=`<div class="l-top"><span class="l-grip"></span><button class="l-x" id="l-x" aria-label="سكّر">✕</button></div>`+html;$('l-x').onclick=lClose;$('lov').classList.remove('hide');$('lsheet').scrollTop=top}
@@ -1115,17 +1130,37 @@ function lOpenPicker(k){
   };
   draw();$('l-q').oninput=e=>{q=e.target.value.trim();draw()};$('l-pc').onclick=lClose;
 }
-function lOpenDish(id){
-  const s=id&&lDish(id),o=s?{...s,ing:[...(s.ing||[])]}:{id:'f'+uid(),n:'',e:'🍲',c:'cook',ing:[],last:''};
+let lBack=null;
+function lOpenSides(k){
+  const p=lPlan()[k];if(!p)return;
+  const sel=new Set(lSideIds(p));
   const draw=()=>{
-    lSheet(`<h2>${s?'عدّل الأكلة':'أكلة جديدة'}</h2><p class="hp">بتنحفظ عندكم الاثنين.</p>
-      <input class="l-in" id="l-dn" placeholder="اسم الأكلة، مثلاً: مقلوبة" value="${esc(o.n)}">
+    const l=lSides().sort((a,b)=>a.n.localeCompare(b.n,'ar'));
+    lSheet(`<h2>🥗 مقبلات ${LDAYS[lDow(k)]} ${dm(k)}</h2><p class="hp">اختاروا وحدة أو أكتر مع ${esc((lDish(p.did)||{}).n||'الأكلة')}.</p>
+      ${l.map(x=>`<div class="l-ck${sel.has(x.id)?' on':' off'}" data-id="${esc(x.id)}"><span class="bx">${sel.has(x.id)?'✓':''}</span><div class="t"><b>${x.e} ${esc(x.n)}</b><small>${(x.ing||[]).length?esc(x.ing.join('، ')):''}</small></div></div>`).join('')||'<p class="hp">ما في مقبلات لسا.</p>'}
+      <button class="l-cl" id="l-sn" style="margin-top:6px">+ مقبلات جديدة</button>
+      <button class="save" id="l-ss">احفظ (${sel.size})</button><button class="l-cl" id="l-sc">إلغاء</button>`);
+    $('lsheet').querySelectorAll('.l-ck').forEach(b=>b.onclick=()=>{const id=b.dataset.id;sel.has(id)?sel.delete(id):sel.add(id);draw()});
+    $('l-sn').onclick=()=>{lBack=()=>lOpenSides(k);lOpenDish(null,true)};
+    $('l-ss').onclick=()=>{const cur=lPlan()[k];if(!cur){lClose();return}
+      const ns=[...sel],same=ns.length===lSideIds(cur).length&&ns.every(x=>lSideIds(cur).includes(x));
+      lClose();if(same)return;sput('plan',{...cur,sides:ns,by:sh.name,u:myUid(),ok:false});toast('انحفظت ✓')};
+    $('l-sc').onclick=lClose;
+  };
+  draw();
+}
+function lOpenDish(id,asSide){
+  const s=id&&lDish(id),o=s?{...s,ing:[...(s.ing||[])]}:(asSide?{id:'s'+uid(),n:'',e:'🥗',c:'side',k:'side',ing:[],last:''}:{id:'f'+uid(),n:'',e:'🍲',c:'cook',ing:[],last:''});
+  const side=lIsSide(o);
+  const draw=()=>{
+    lSheet(`<h2>${side?(s?'عدّل المقبلات':'مقبلات جديدة'):(s?'عدّل الأكلة':'أكلة جديدة')}</h2><p class="hp">بتنحفظ عندكم الاثنين.</p>
+      <input class="l-in" id="l-dn" placeholder="${side?'مثلاً: سلطة عربية':'اسم الأكلة، مثلاً: مقلوبة'}" value="${esc(o.n)}">
       <div class="l-lbl">الشكل</div><div class="l-emo">${LEMO.map(e=>`<button class="${o.e===e?'on':''}" data-e="${e}">${e}</button>`).join('')}</div>
-      <div class="l-lbl">النوع</div><div class="subs" style="margin-top:0">${Object.entries(LCATS).map(([k,v])=>`<button class="sub${o.c===k?' sel':''}" data-c="${k}">${v}</button>`).join('')}</div>
+      ${side?'':`<div class="l-lbl">النوع</div><div class="subs" style="margin-top:0">${Object.entries(LCATS).map(([k,v])=>`<button class="sub${o.c===k?' sel':''}" data-c="${k}">${v}</button>`).join('')}</div>`}
       ${o.c==='out'?'<p class="hp" style="margin-top:8px">أكل من برا ما إله مكونات.</p>':`<div class="l-lbl">المكونات (عشان تنضاف للطلبات)</div>
       <div class="l-ing">${o.ing.map((x,i)=>`<span>${esc(x)}<button data-i="${i}">✕</button></span>`).join('')||'<span style="border-style:dashed;color:var(--muted)">لسا ما في</span>'}</div>
       <div class="addp" style="margin-top:6px"><input id="l-ni" placeholder="مثلاً: دجاج (أو كذا وحدة بفاصلة)"><button id="l-ai">+</button></div>`}
-      <button class="save" id="l-ds">احفظ</button><button class="l-cl" id="l-dc">إلغاء</button>${s?'<button class="l-del" id="l-dd">🗑 احذف الأكلة</button>':''}`);
+      <button class="save" id="l-ds">احفظ</button><button class="l-cl" id="l-dc">إلغاء</button>${s?`<button class="l-del" id="l-dd">🗑 احذف ${side?'المقبلات':'الأكلة'}</button>`:''}`);
     const keep=()=>{o.n=$('l-dn').value};
     $('lsheet').querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>{keep();o.e=b.dataset.e;draw()});
     $('lsheet').querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{keep();o.c=b.dataset.c;draw()});
@@ -1134,16 +1169,16 @@ function lOpenDish(id){
     if($('l-ai')){$('l-ai').onclick=addI;$('l-ni').onkeydown=e=>{if(e.key==='Enter')addI()}}
     $('l-ds').onclick=()=>{keep();o.n=o.n.trim();if(!o.n){toast('اكتب اسم الأكلة');return}
       if($('l-ni')&&$('l-ni').value.trim())$('l-ni').value.split(/[،,]/).map(x=>x.trim()).filter(Boolean).forEach(x=>{if(!o.ing.includes(x))o.ing.push(x)});
-      if(o.c==='out')o.ing=[];lClose();sput('dishes',o);toast('انحفظت ✓')};
-    $('l-dc').onclick=lClose;
+      if(o.c==='out')o.ing=[];lClose();sput('dishes',o);toast('انحفظت ✓');if(lBack){const f=lBack;lBack=null;f()}};
+    $('l-dc').onclick=()=>{lClose();if(lBack){const f=lBack;lBack=null;f()}};
     if($('l-dd'))$('l-dd').onclick=()=>{if(!confirm(`تحذف "${o.n}"؟ رح تنحذف عند الكل.`))return;
-      Object.values(lPlan()).filter(p=>p.did===o.id&&p.id>=ltoday()).forEach(p=>sdel('plan',p.id));sdel('dishes',o.id);lClose();renderShared();sync()};
+      Object.values(lPlan()).filter(p=>p.id>=ltoday()).forEach(p=>{if(p.did===o.id)sdel('plan',p.id);else if((p.sides||[]).includes(o.id))sput('plan',{...p,sides:p.sides.filter(x=>x!==o.id)})});sdel('dishes',o.id);lClose();renderShared();sync()};
   };
   draw();
 }
 function lOpenIngs(){
   const t=ltoday(),ds=lWeek(lwOff).filter(k=>k>=t&&lPlan()[k]&&lDish(lPlan()[k].did)),m={};
-  ds.forEach(k=>{const d=lDish(lPlan()[k].did);(d.ing||[]).forEach(x=>{(m[x]=m[x]||[]).push(d.n)})});
+  ds.forEach(k=>{const p=lPlan()[k];[p.did,...lSideIds(p)].map(lDish).filter(Boolean).forEach(d=>(d.ing||[]).forEach(x=>{(m[x]=m[x]||[]).push(d.n)}))});
   const open=shopOpen().map(x=>x.n);
   const items=Object.entries(m).map(([n,f])=>({n,f:[...new Set(f)],dup:open.includes(n),on:!open.includes(n)}));
   if(!items.length){toast(ds.length?'الأكلات المختارة ما إلها مكونات':'اختاروا أكلات للأيام الجاية أول');return}
